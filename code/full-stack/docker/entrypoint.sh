@@ -2,6 +2,8 @@
 
 set -e
 
+echo "Running Prisma migrations..."
 npx prisma migrate deploy --schema=prisma/schema.prisma
 
-exec node server.js
+echo "Starting Next.js server..."
+exec node /app/server.js

@@ -72,7 +72,5 @@ Files touched during containerization:
 - [docker-compose.yml](docker-compose.yml)
 - [prisma.config.ts](prisma.config.ts)
 - [prisma/schema.prisma](prisma/schema.prisma)
-<<<<<<< HEAD
-=======
 
->>>>>>> e8052bd (Got rid of powershell scripts in entrypoint.sh)
+ssh first.last@cpts-invtoolapp.eecs.wsu.edu
