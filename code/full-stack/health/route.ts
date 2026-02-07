@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { Pool } from "pg";
+
+export const runtime = "nodejs";
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export async function GET() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(users);
-}
-
-export async function POST() {
-  const email = `user${Date.now()}@example.com`;
-
-  const user = await prisma.user.create({
-    data: { email, name: "Test User" },
-  });
-
-  return NextResponse.json(user, { status: 201 });
+  try {
+    const result = await pool.query("SELECT 1 AS ok");
+    return NextResponse.json({ ok: true, db: result.rows[0]?.ok ?? 1 });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: (error as Error).message },
+      { status: 500 }
+    );
+  }
 }

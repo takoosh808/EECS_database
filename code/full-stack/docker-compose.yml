@@ -16,8 +16,7 @@ services:
   web:
     build:
       context: .
-      args:
-        DATABASE_URL: ${DATABASE_URL}
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -32,11 +31,11 @@ services:
   nginx:
     image: nginx:1.27
     depends_on:
-        - web
+      - web
     ports:
-        - "8080:80"   # public entrypoint
+      - "8080:80"   # public entrypoint
     volumes:
-        - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   pgdata:

@@ -34,30 +34,13 @@ docker compose logs web --tail=200
 docker compose logs db --tail=200
 ```
 
-6. Prisma-specific steps done during image build and container startup:
-- We pass `DATABASE_URL` as a build arg so `npx prisma generate` succeeds during the `docker build` step.
-- The runtime image includes `prisma.config.ts` so `npx prisma migrate deploy` can read the datasource URL at startup.
-
-7. If you need to run migrations manually inside the running `web` container:
-
-```powershell
-docker compose exec web npx prisma migrate deploy
-```
-
-8. To generate the Prisma client locally (outside Docker):
-
-```powershell
-cd code/full-stack
-npx prisma generate --schema=prisma/schema.prisma
-```
-
-9. Test the app in your browser:
+6. Test the app in your browser:
 
 - Through nginx reverse-proxy: `http://localhost:8080`
 - Directly to the app: `http://localhost:3000`
 - Health endpoint: `http://localhost:8080/health` or `http://localhost:3000/health`
 
-10. Troubleshooting commands you may need:
+7. Troubleshooting commands you may need:
 
 ```powershell
 docker compose logs --follow
@@ -70,7 +53,6 @@ Files touched during containerization:
 - [dockerfile](dockerfile)
 - [docker/entrypoint.sh](docker/entrypoint.sh)
 - [docker-compose.yml](docker-compose.yml)
-- [prisma.config.ts](prisma.config.ts)
-- [prisma/schema.prisma](prisma/schema.prisma)
 
 ssh first.last@cpts-invtoolapp.eecs.wsu.edu
+cd /opt/invapp
