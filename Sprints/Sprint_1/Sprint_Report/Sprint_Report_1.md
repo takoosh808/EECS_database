@@ -1,14 +1,16 @@
-# Sprint x Report (Dates from Sprint * to Sprint *)
+# Sprint 1 Report (Dates from Sprint * to Sprint *)
 
 ## YouTube link of Sprint * Video (Make this video unlisted)
 
 ## What's New (User Facing)
- * Feature 1 or Bug Fix 1
- * Feature 2 or Bug Fix 2
- * Feature n or Bug Fix n
+ * Project Description
+ * Functional/Non-Functional Requirements
+ * UML Diagrams
+ * User Stories/Use Cases
+ * VM/Docker integration
 
 ## Work Summary (Developer Facing)
-Provide a one paragraph synposis of what your team accomplished this sprint. Don't repeat the "What's New" list of features. Instead, help the instructor understand how you went about the work described there, any barriers you overcame, and any significant learnings for your team.
+This sprint was primarily focused on documentation of our project, and ensuring that we have all of the requirements necessary before building our project. We spent the majority of the time compiling requirements through meetings with our client and using online materials similar to what our system would look like. We then used these to create documentation through User stories, UML diagrams, and Use cases to show the base extent of what our project will contain.
 
 ## Unfinished Work
 If applicable, explain the work you did not finish in this sprint. For issues/user stories in the current sprint that have not been closed, (a) any progress toward completion of the issues has been clearly tracked (by checking the checkboxes of  acceptance criteria), (b) a comment has been added to the issue to explain why the issue could not be completed (e.g., "we ran out of time" or "we did not anticipate it would be so much work"), and (c) the issue is added to a subsequent sprint, so that it can be addressed later.
@@ -62,3 +64,4 @@ Here are changes we plan to implement in the next sprint:
    * Item 1
    * Item 2
    * Item x
+
