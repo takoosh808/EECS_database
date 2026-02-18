@@ -24,15 +24,15 @@ Here are links to the issues that we completed in this sprint:
  ## Incomplete Issues/User Stories
  Here are links to issues we worked on but did not complete in this sprint:
  
- * https://github.com/takoosh808/EECS_database/issues/2 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/8 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/9 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/11 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/2 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/4 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/6 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/7 <<We did not have enough time to begin feature implementation>>
- * https://github.com/takoosh808/EECS_database/issues/10 <<We did not have enough time to begin feature implementation>>
+ * https://github.com/takoosh808/EECS_database/issues/2 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/8 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/9 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/11 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/2 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/4 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/6 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/7 <We did not have enough time to begin feature implementation>
+ * https://github.com/takoosh808/EECS_database/issues/10 <We did not have enough time to begin feature implementation>
  
  
 ## Retrospective Summary
