@@ -1,6 +1,6 @@
 # Sprint 1 Report (1/23/2026-2/22/2026)
 
-## YouTube link of Sprint * Video (Make this video unlisted)
+## https://youtu.be/YzdOJDePDOM
 
 ## What's New (User Facing)
  * Project Description
@@ -46,6 +46,7 @@ Here's what we'd like to improve:
   
 Here are changes we plan to implement in the next sprint:
    * Actually coding the features
+
 
 
 
