@@ -1,4 +1,4 @@
-# Sprint 1 Report (Dates from Sprint * to Sprint *)
+# Sprint 1 Report (1/23/2026-2/22/2026)
 
 ## YouTube link of Sprint * Video (Make this video unlisted)
 
@@ -46,5 +46,6 @@ Here's what we'd like to improve:
   
 Here are changes we plan to implement in the next sprint:
    * Actually coding the features
+
 
 
