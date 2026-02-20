@@ -37,17 +37,14 @@ Here are links to the issues that we completed in this sprint:
  
 ## Retrospective Summary
 Here's what went well:
-  * Item 1
-  * Item 2
-  * Item x
+  * We were on top of the deadlines, very ahead
+  * We had good communication amongst ourselves and with our client
+  * We were resourceful with finding information for the requirements
  
 Here's what we'd like to improve:
-   * Item 1
-   * Item 2
-   * Item x
+   * Work harder to actually implement features
   
 Here are changes we plan to implement in the next sprint:
-   * Item 1
-   * Item 2
-   * Item x
+   * Actually coding the features
+
 
