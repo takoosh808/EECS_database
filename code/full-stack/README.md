@@ -54,5 +54,18 @@ Files touched during containerization:
 - [docker/entrypoint.sh](docker/entrypoint.sh)
 - [docker-compose.yml](docker-compose.yml)
 
+## Database schema bootstrap
+
+- Base schema is in [db/init/001_base_schema.sql](db/init/001_base_schema.sql).
+- Compose mounts `./db/init` to Postgres `docker-entrypoint-initdb.d`, so tables are created automatically on first startup of a new database volume.
+- Implemented base tables only: `labs`, `categories`, `assets` (no admin approval/disapproval table yet).
+
+If Postgres was already initialized before this file was added, reset the DB volume once:
+
+```powershell
+docker compose down -v
+docker compose up -d --build
+```
+
 ssh first.last@cpts-invtoolapp.eecs.wsu.edu
 cd /opt/invapp
