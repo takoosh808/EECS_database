@@ -18,17 +18,25 @@ CREATE TABLE IF NOT EXISTS assets (
   category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
   lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
   serial_number TEXT NOT NULL UNIQUE,
-  checked_out_to TEXT,
-  checked_out BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT assets_checkout_consistency_chk
-    CHECK (
-      (checked_out = TRUE AND checked_out_to IS NOT NULL)
-      OR
-      (checked_out = FALSE AND checked_out_to IS NULL)
-    )
 );
+
+CREATE TABLE IF NOT EXISTS asset_checkout(
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  checkout_status VARCHAR(20) DEFAULT 'PENDING',
+  request_date TIMESTAMPTZ DEFAULT NOW(),
+  checkout_length INTEGER,
+  processed_by INTEGER,
+  returned_at TIMESTAMPTZ
+  CHECK (checkout_status IN ('PENDING','ACTIVE','RETURNED'))
+);
+
+CREATE UNIQUE INDEX one_active_checkout_per_asset
+ON assetCheckout(asset_id)
+WHERE checkout_status = 'ACTIVE' AND returned_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_assets_category_id ON assets(category_id);
 CREATE INDEX IF NOT EXISTS idx_assets_lab_id ON assets(lab_id);
