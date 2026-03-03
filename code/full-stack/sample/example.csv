@@ -1,0 +1,3 @@
+name,category_id,lab_id,serial_number,checked_out,checked_out_to
+Meter,dbeac5ae-4871-4821-b5a3-397feb5e8d01,7abaa970-5b5e-4841-a97b-b64a3f69313c,CSV-0001,false,
+Analyzer,dbeac5ae-4871-4821-b5a3-397feb5e8d01,7abaa970-5b5e-4841-a97b-b64a3f69313c,CSV-0002,true,test.user@wsu.edu
