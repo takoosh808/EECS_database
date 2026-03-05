@@ -1,0 +1,3 @@
+name,category_name,lab_name,serial_number,checked_out,checked_out_to
+Meter,category1,lab1,CSV-0001,false,
+Analyzer,category1,lab1,CSV-0002,true,test.user@wsu.edu

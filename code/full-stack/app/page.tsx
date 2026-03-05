@@ -102,6 +102,14 @@ export default function Home() {
           <p>Category reference: category_name or category_id</p>
           <p>Lab reference: lab_name or lab_id</p>
           <p>Optional: checked_out, checked_out_to</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <a className="underline" href="/sample/example.csv" download>
+              Download name-based template
+            </a>
+            <a className="underline" href="/sample/example_ids.csv" download>
+              Download id-based template
+            </a>
+          </div>
         </section>
 
         {result && (
