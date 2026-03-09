@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS asset_checkout(
   checkout_length INTEGER,
   processed_by UUID,
   returned_at TIMESTAMPTZ,
-  CHECK (checkout_status IN ('PENDING','ACTIVE','RETURNED', 'RETURN_REQUESTED', 'RETURN_APPROVED', 'RETURNED'))
+  CHECK (checkout_status IN ('PENDING','ACTIVE', 'RETURN_REQUESTED', 'RETURN_APPROVED', 'RETURNED', 'DENIED'))
 );
 
 
