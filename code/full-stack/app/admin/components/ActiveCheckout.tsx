@@ -1,12 +1,12 @@
 "use client"
 import {act, useEffect, useState} from "react"
-import {ActiveAsset} from "../../types";
+import {Asset} from "../../types";
 
 //View for active checkouts
 export default function ActiveAssetsView()
 {
     //Call a GET API route for active assets
-    const [active, setActive] = useState<ActiveAsset[]>([]);
+    const [active, setActive] = useState<Asset[]>([]);
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         async function loadActiveRequests()
@@ -14,7 +14,7 @@ export default function ActiveAssetsView()
             try{
                 const res = await fetch("/api/requests/active");
                 if(!res.ok) throw new Error("Failed to fetch active assets");
-                const data: ActiveAsset[] = await res.json();
+                const data: Asset[] = await res.json();
                 setActive(data);
             }
             catch(err)
@@ -25,6 +25,7 @@ export default function ActiveAssetsView()
         }
         loadActiveRequests();
     }, []);
+
 
     async function ApproveReturn(requestId: string)
     {

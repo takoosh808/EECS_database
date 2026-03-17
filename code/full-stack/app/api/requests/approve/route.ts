@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
+import { broadcastRequestUpdate } from "../updates/sseHelper";
 
+//POST API route for approving requests
 export async function POST(req: NextRequest)
 {
     try

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../db/init/db_index";
 
+//GET API for querying Requested assets
 export async function GET(req: NextRequest)
 {
     const result = await pool.query(

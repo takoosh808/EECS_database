@@ -1,12 +1,12 @@
 "use client"
 import {useEffect, useState} from "react"
-import {InactiveAsset} from "../../types";
+import {Asset} from "../../types";
 
 //View for asset history
 export default function AssetHistoryView()
 {
     //Call a GET API route for active assets
-    const [inactive, setInactive] = useState<InactiveAsset[]>([]);
+    const [inactive, setInactive] = useState<Asset[]>([]);
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         async function loadInactiveAssets()
@@ -14,7 +14,7 @@ export default function AssetHistoryView()
             try{
                 const res = await fetch("/api/requests/inactive");
                 if(!res.ok) throw new Error("Failed to fetch inactive assets");
-                const data: InactiveAsset[] = await res.json();
+                const data: Asset[] = await res.json();
                 setInactive(data);
             }
             catch(err)

@@ -1,7 +1,6 @@
 "use client"
 import {useEffect, useState} from "react"
-import {AssetRequest} from "../../types";
-import { delayUntilRuntimeStage } from "next/dist/server/app-render/dynamic-rendering";
+import {Asset} from "../../types";
 
 
 //Important: We need to implmenet server sockets for real time updating. since its possible multiple admins will be using this webapp we'll need real time updating.
@@ -11,7 +10,7 @@ import { delayUntilRuntimeStage } from "next/dist/server/app-render/dynamic-rend
 export default function RequestsView()
 {
     //call a GET API route for asset requests
-    const [requests, setRequests] = useState<AssetRequest[]>([]);
+    const [requests, setRequests] = useState<Asset[]>([]);
     const [error, setError] = useState<string | null>(null);
     
     //we need to add server socket to apply real time server updates for new requests
@@ -21,7 +20,7 @@ export default function RequestsView()
             try{
                 const res = await fetch("/api/requests");
                 if(!res.ok) throw new Error("Failed to fetch requests");
-                const data: AssetRequest[] = await res.json();
+                const data: Asset[] = await res.json();
                 setRequests(data);
             }
             catch(err)
@@ -33,6 +32,7 @@ export default function RequestsView()
         loadRequests();
     }, []);
     
+   
     //Function for approving requests which calls aprove API route
     async function approveRequests(requestId: string)
     {
