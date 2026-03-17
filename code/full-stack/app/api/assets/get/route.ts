@@ -6,9 +6,8 @@ export async function GET(req: NextRequest)
     try{
          const result = await pool.query(
         `
-        SELECT id, asset_id, user_id, checkout_status, request_date, checkout_length, processed_by, returned_at
-        FROM asset_checkout
-        WHERE checkout_status IN ('DENIED', 'RETURNED')
+        SELECT id, name, category_id, lab_id, serial_number, created_at, updated_at
+        FROM assets
         `
     );
     return NextResponse.json(result.rows);
@@ -16,6 +15,6 @@ export async function GET(req: NextRequest)
     catch(err)
     {
         console.error(err);
-        return NextResponse.json({ error: "Failed to fetch inactive assets" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to fetch assets" }, { status: 500 });
     }
 }

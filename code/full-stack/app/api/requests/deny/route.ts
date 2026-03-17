@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
+import { broadcastEvent } from "../sse/route";
 
 //POST API route for approving requests, very similar to approve but we use DENIED flag
 export async function POST(req: NextRequest)
@@ -11,9 +12,7 @@ export async function POST(req: NextRequest)
         const reqRow = await pool.query(
             `
             SELECT checkout_status FROM asset_checkout WHERE id = $1
-            `
-            ,
-            [id]
+            `,[id]
         )
         if (reqRow.rowCount === 0)
         {
@@ -23,15 +22,20 @@ export async function POST(req: NextRequest)
         {
             return NextResponse.json({ error: "Request already processed" }, { status: 400 });
         }
+        console.log("SQL query:", `
+        UPDATE asset_checkout
+        SET checkout_status = $1
+        WHERE id = $2
+        `);
+        console.log("Params:", ["DENIED", id]);
         await pool.query(
             `
-            UPDATE asset_checkout 
-            SET checkout_status = $1 
+            UPDATE asset_checkout
+            SET checkout_status = $1
             WHERE id = $2
-            `
-            ,
-            ["DENIED", id]
+            `,["DENIED", id]
         );
+        broadcastEvent({ type: "DENIED", requestId: id });
         return NextResponse.json({success: true});
     }
     catch(err)

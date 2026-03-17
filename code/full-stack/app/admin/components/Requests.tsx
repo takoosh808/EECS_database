@@ -3,36 +3,15 @@ import {useEffect, useState} from "react"
 import {Asset} from "../../types";
 
 
-//Important: We need to implmenet server sockets for real time updating. since its possible multiple admins will be using this webapp we'll need real time updating.
-//Pooling is also an option but sockets is more industry standard.
+
+type Props = {
+    data: Asset[];
+}
+
 
 //View for requested assets
-export default function RequestsView()
+export default function RequestsView({data}: Props)
 {
-    //call a GET API route for asset requests
-    const [requests, setRequests] = useState<Asset[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    
-    //we need to add server socket to apply real time server updates for new requests
-    useEffect(() => {
-        async function loadRequests()
-        {
-            try{
-                const res = await fetch("/api/requests");
-                if(!res.ok) throw new Error("Failed to fetch requests");
-                const data: Asset[] = await res.json();
-                setRequests(data);
-            }
-            catch(err)
-            {
-                console.error(err);
-                setError("Failed to load requests");
-            }
-        }
-        loadRequests();
-    }, []);
-    
-   
     //Function for approving requests which calls aprove API route
     async function approveRequests(requestId: string)
     {
@@ -44,7 +23,7 @@ export default function RequestsView()
             });
             if (!res.ok) throw new Error("Failed to approve request");
 
-            setRequests((prev) => prev.filter((r) => r.id !== requestId));
+          
         }
         catch(err)
         {
@@ -53,15 +32,14 @@ export default function RequestsView()
     }
     async function denyRequest(requestId: string)
     {
-         try{
-            const res = await fetch("../../api/requests/deny", {
+        try{
+            const res = await fetch("/api/requests/deny", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({id: requestId}),
             });
             if (!res.ok) throw new Error("Failed to deny request");
 
-            setRequests((prev) => prev.filter((r) => r.id !== requestId));
         }
         catch(err)
         {
@@ -71,12 +49,12 @@ export default function RequestsView()
     return (
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-6xl mx-auto">
             <h2 className="text-1xl font-bold mb-4">
-                Pending Requests ({requests.length})
+                Pending Requests ({data.length})
             </h2>
-            {requests.length === 0 && (
+            {data.length === 0 && (
                 <p className="text-gray-500 text-center">No pending requests.</p>
             )}
-            {requests.length !== 0 &&(
+            {data.length !== 0 &&(
                 <>
                     {/* Table header */}
                     <div className="grid grid-cols-5 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
@@ -88,7 +66,7 @@ export default function RequestsView()
                     </div>
                     {/* Table rows */}
                     <div className="space-y-2">
-                        {requests.map((req) => (
+                        {data.map((req) => (
                             <div key={req.id} className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200">
                                 <div>{req.user_id}</div>
                                 <div>{req.asset_id}</div>

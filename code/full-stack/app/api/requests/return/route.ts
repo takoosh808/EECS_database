@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
+import { broadcastEvent } from "../sse/route";
+
 
 //POST API route for approving requests
 export async function POST(req: NextRequest)
@@ -32,6 +34,7 @@ export async function POST(req: NextRequest)
             ,
             ["RETURNED", id]
         );
+        broadcastEvent({ type: "RETURNED", requestId: id });
         return NextResponse.json({success: true});
     }
     catch(err)

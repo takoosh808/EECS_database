@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
-import { broadcastRequestUpdate } from "../updates/sseHelper";
+import { broadcastEvent } from "../sse/route";
 
 //POST API route for approving requests
 export async function POST(req: NextRequest)
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest)
             ,
             ["ACTIVE", id]
         );
+        broadcastEvent({ type: "APPROVE", requestId: id });
         return NextResponse.json({success: true});
     }
     catch(err)
