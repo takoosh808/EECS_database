@@ -6,13 +6,28 @@ import RequestsView from "./components/Requests";
 import {AssetCheckout, Asset} from "../types";
 import { useEffect, useState, useCallback} from "react";
 import EditAssetsView from "./components/EditAssets";
+import EditAssetsPanel from "./components/EditAssetsPanel";
 
 export default function AdminDashboard()
 {
     const[requests, setRequests] = useState<AssetCheckout[]>([]);
     const[active, setActive] = useState<AssetCheckout[]>([]);
     const[inactive, setInactive] = useState<AssetCheckout[]>([]);
-    const[assets, setState] = useState<Asset[]>([]);
+    const[assets, setAssets] = useState<Asset[]>([]);
+    const [showCreatePanel, setShowCreatePanel] = useState(false);
+
+    const handleCreateAsset = (newAsset: Asset) => {
+        // send to backend
+        fetch("/api/assets/edit/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newAsset)
+        }).then(res => res.json())
+          .then(data => {
+              setAssets([...assets, newAsset]);
+          });
+    };
+
     const fetchRequests = useCallback(async () => {
         const res = await fetch("/api/requests");
         setRequests(await res.json());
@@ -30,7 +45,7 @@ export default function AdminDashboard()
 
     const fetchAssets = useCallback(async () =>{
         const res = await fetch("/api/assets/get")
-        setState(await res.json());
+        setAssets(await res.json());
     }, []);
 
     useEffect(() => {
@@ -41,7 +56,7 @@ export default function AdminDashboard()
     }, [fetchRequests, fetchActive, fetchInactive, fetchAssets]);
 
     useEffect(() => {
-        const evtSource = new EventSource("/api/requests/sse");
+        const evtSource = new EventSource("/api/sse");
         evtSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
         // Update selectively depending on event type
@@ -59,9 +74,17 @@ export default function AdminDashboard()
             fetchActive();
             fetchInactive();
         }
+        if(data.type === "REMOVE_ASSET")
+        {
+            fetchAssets();
+        }
+        if(data.type === "ADD_ASSET")
+        {
+            fetchAssets();
+        }
     };
     return () => evtSource.close();
-  }, [fetchRequests, fetchActive, fetchInactive]);
+  }, [fetchRequests, fetchActive, fetchInactive, fetchAssets]);
 
     return(
        <header className="">
@@ -73,6 +96,14 @@ export default function AdminDashboard()
             <ActiveAssetsView data={active}/>
             <AssetHistoryView data={inactive}/>
             <EditAssetsView data={assets} />
+            
+            <button className="cursor-pointer" onClick={() => setShowCreatePanel(true)}>Create New Asset</button>
+            {showCreatePanel && (
+                <EditAssetsPanel
+                    onClose={() => setShowCreatePanel(false)}
+                    onCreate={handleCreateAsset}
+                />
+            )}
         </header>
     );
 }

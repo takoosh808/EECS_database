@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
-import { broadcastEvent } from "../sse/route";
+import { broadcastEvent } from "../../sse/route";
 
 //POST API route for approving requests, very similar to approve but we use DENIED flag
 export async function POST(req: NextRequest)

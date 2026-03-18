@@ -21,8 +21,10 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS assets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
-  lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
+  --category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+  --lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
+  category_id TEXT NOT NULL,
+  lab_id TEXT NOT NULL,
   serial_number TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -50,7 +52,7 @@ CREATE TYPE message_type_enum AS ENUM (
 --sender_id needs to reference admin id once the table exists for users
 CREATE TABLE IF NOT EXISTS asset_checkout_messages(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  checkout_id UUID NOT NULL REFERENCES asset_checkout(id),
+  checkout_id UUID NOT NULL REFERENCES asset_checkout(id) ON DELETE CASCADE,
   sender_id UUID DEFAULT NULL,
   message_type message_type_enum NOT NULL,
   message_text TEXT NOT NULL,
