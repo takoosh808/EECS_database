@@ -9,7 +9,7 @@ const pool = new Pool({
 
 export async function GET() {
   try {
-    const result = await pool.query("SELECT 1 AS ok");
+    const result = await pool.query<{ ok: number }>("SELECT 1 AS ok");
     return NextResponse.json({ ok: true, db: result.rows[0]?.ok ?? 1 });
   } catch (error) {
     return NextResponse.json(

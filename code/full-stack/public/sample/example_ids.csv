@@ -1,0 +1,3 @@
+name,category_id,lab_id,serial_number,checked_out,checked_out_to
+Oscilloscope,<CATEGORY_ID>,<LAB_ID>,CSV-ID-0001,false,
+Signal Generator,<CATEGORY_ID>,<LAB_ID>,CSV-ID-0002,true,test.user@wsu.edu
