@@ -7,9 +7,10 @@ export async function POST(req: NextRequest)
 {
     try
     {
-        const{id} = await req.json();
+        const body = (await req.json()) as { id?: string };
+        const id = body.id;
         if (!id) return NextResponse.json({error: "No ID provided"}, {status: 400});
-        const reqRow = await pool.query(
+        const reqRow = await pool.query<{ checkout_status: string }>(
             `
             SELECT checkout_status FROM asset_checkout WHERE id = $1
             `,[id]

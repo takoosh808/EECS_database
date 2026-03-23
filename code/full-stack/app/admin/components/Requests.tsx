@@ -1,11 +1,10 @@
 "use client"
-import {useEffect, useState} from "react"
-import {Asset} from "../../types";
+import {AssetCheckout} from "../../types";
 
 
 
 type Props = {
-    data: Asset[];
+    data: AssetCheckout[];
 }
 
 

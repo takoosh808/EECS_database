@@ -9,6 +9,12 @@ type FormState = {
   confirmPassword: string;
 };
 
+type RegisterResponse = {
+  ok: boolean;
+  message: string;
+  error?: string;
+};
+
 export default function RegisterPage() {
   const [form, setForm] = useState<FormState>({
     fullName: "",
@@ -58,8 +64,31 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setMessage("Create-user UI is ready. Next step is wiring this form to your user API.");
+      const response = await fetch("/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const payload = (await response.json()) as RegisterResponse;
+      if (!response.ok || !payload.ok) {
+        setError(payload.message || payload.error || "Failed to create user.");
+        return;
+      }
+
+      setMessage(payload.message || "User created successfully.");
+      setForm({
+        fullName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
     } catch (submitError) {
       setError((submitError as Error).message || "Failed to create user.");
     } finally {

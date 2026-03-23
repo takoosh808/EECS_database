@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 type FormState = {
@@ -7,7 +8,14 @@ type FormState = {
   password: string;
 };
 
+type LoginResponse = {
+  ok: boolean;
+  message: string;
+  error?: string;
+};
+
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +51,25 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setMessage("Login UI is ready. Next step is wiring this form to your auth backend.");
+      const response = await fetch("/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const payload = (await response.json()) as LoginResponse;
+      if (!response.ok || !payload.ok) {
+        setError(payload.message || payload.error || "Login failed.");
+        return;
+      }
+
+      setMessage(payload.message || "Login successful.");
+      router.push("/home");
     } catch (submitError) {
       setError((submitError as Error).message || "Login failed.");
     } finally {
