@@ -19,33 +19,35 @@ This sprint we finished everything that was required of us. We completed two dif
 Here are links to the issues that we completed in this sprint:
 
  * https://github.com/takoosh808/EECS_database/issues/1
+ * https://github.com/takoosh808/EECS_database/issues/18
+ * https://github.com/takoosh808/EECS_database/issues/5
+ * https://github.com/takoosh808/EECS_database/issues/15
+ * https://github.com/takoosh808/EECS_database/issues/12
 
  
  ## Incomplete Issues/User Stories
  Here are links to issues we worked on but did not complete in this sprint:
  
- * https://github.com/takoosh808/EECS_database/issues/2 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/8 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/9 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/11 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/2 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/4 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/6 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/7 We did not have enough time to begin feature implementation
- * https://github.com/takoosh808/EECS_database/issues/10 We did not have enough time to begin feature implementation
+ * https://github.com/takoosh808/EECS_database/issues/3
+ * https://github.com/takoosh808/EECS_database/issues/6
+ * https://github.com/takoosh808/EECS_database/issues/7
+ * https://github.com/takoosh808/EECS_database/issues/11
+ * https://github.com/takoosh808/EECS_database/issues/16
  
  
 ## Retrospective Summary
 Here's what went well:
-  * We were on top of the deadlines, very ahead
-  * We had good communication amongst ourselves and with our client
-  * We were resourceful with finding information for the requirements
+  * Got basic workflow for user working
+  * Got basic workflow for admin working
+  * UI and system design all planned
  
 Here's what we'd like to improve:
-   * Work harder to actually implement features
+   * Implement more features ahead of time
   
 Here are changes we plan to implement in the next sprint:
-   * Actually coding the features
+   * User Dashboard
+   * Notifications
+   * Updating UI
 
 
 
