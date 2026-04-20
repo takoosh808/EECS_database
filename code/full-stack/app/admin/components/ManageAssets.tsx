@@ -34,6 +34,7 @@ export default function EditAssetsView({ data }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedAsset),
     });
+    window.location.reload();
   };
 
   return (
@@ -84,7 +85,7 @@ export default function EditAssetsView({ data }: Props) {
             setShowEditPanel(false);
             setSelectedAsset(null);
           }}
-          onCreate={handleEditAsset}
+          onEdit={handleEditAsset}
           assets={data}
           assetToEdit={selectedAsset}
         />

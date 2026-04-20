@@ -4,19 +4,19 @@ import { Lab } from "../../types";
 import LabCombobox from "./LabComboBox";
 import CategoryCombobox from "./CategoryComboBox";
 
-interface CreateAssetPanelProps {
+interface EditAssetPanelProps {
   onClose: () => void; // called when user closes panel
-  onCreate: (asset: Asset) => void; // called when user submits new asset
+  onEdit: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
-  assetToEdit?: Asset;
+  assetToEdit: Asset;
 }
 
-export default function CreateAssetPanel({
+export default function EditAssetPanel({
   onClose,
-  onCreate,
+  onEdit,
   assets,
   assetToEdit,
-}: CreateAssetPanelProps) {
+}: EditAssetPanelProps) {
   const [name, setName] = useState("");
   const [category_id, setCategoryId] = useState("");
   const [lab_id, setLabId] = useState("");
@@ -24,18 +24,18 @@ export default function CreateAssetPanel({
   const [error, setError] = useState("");
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const newAsset: Asset = {
-      id: crypto.randomUUID(),
-      name,
-      category_id,
-      lab_id,
-      serial_number,
-      created_at: undefined,
-      updated_at: undefined,
-    };
-
-    onCreate(newAsset);
+    const updatedAsset: Asset = {
+    id: assetToEdit.id,
+    name,
+    category_id,
+    lab_id,
+    serial_number,
+    created_at: assetToEdit?.created_at,
+    updated_at: undefined,
+  };
+    
+  onEdit(updatedAsset);
+    
     onClose();
   };
 
@@ -139,7 +139,7 @@ export default function CreateAssetPanel({
 
           <div style={{ marginTop: "10px" }}>
             <button className="cursor-pointer" type="submit">
-              Create
+              Edit
             </button>
 
             <button
