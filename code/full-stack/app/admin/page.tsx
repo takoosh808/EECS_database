@@ -5,8 +5,8 @@ import AssetHistoryView from "./components/RequestHistory";
 import RequestsView from "./components/Requests";
 import {AssetCheckout, Asset} from "../types";
 import { useEffect, useState, useCallback} from "react";
-import EditAssetsView from "./components/EditAssets";
-import EditAssetsPanel from "./components/EditAssetsPanel";
+import EditAssetsView from "./components/ManageAssets";
+import CreateAssetsPanel from "./components/CreateAssetsPanel";
 
 export default function AdminDashboard()
 {
@@ -18,6 +18,12 @@ export default function AdminDashboard()
 
     const handleCreateAsset = (newAsset: Asset) => {
         // send to backend
+        //we need to do checks here whenever a new asset is created.
+
+        //first we need to check the fields that are referenced 
+
+
+
         fetch("/api/assets/edit/add", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -99,9 +105,10 @@ export default function AdminDashboard()
             
             <button className="cursor-pointer" onClick={() => setShowCreatePanel(true)}>Create New Asset</button>
             {showCreatePanel && (
-                <EditAssetsPanel
+                <CreateAssetsPanel
                     onClose={() => setShowCreatePanel(false)}
                     onCreate={handleCreateAsset}
+                    assets={assets}
                 />
             )}
         </header>

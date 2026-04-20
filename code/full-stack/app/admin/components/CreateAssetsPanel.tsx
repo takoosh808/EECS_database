@@ -8,14 +8,12 @@ interface CreateAssetPanelProps {
   onClose: () => void; // called when user closes panel
   onCreate: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
-  assetToEdit?: Asset;
 }
 
 export default function CreateAssetPanel({
   onClose,
   onCreate,
   assets,
-  assetToEdit,
 }: CreateAssetPanelProps) {
   const [name, setName] = useState("");
   const [category_id, setCategoryId] = useState("");
@@ -50,19 +48,6 @@ export default function CreateAssetPanel({
   }, []);
   console.log("labs:", labs);
 
-  useEffect(() => {
-    if (!assetToEdit) return;
-
-    setName(assetToEdit.name ?? "");
-    setCategoryId(assetToEdit.category_id ?? "");
-    setLabId(assetToEdit.lab_id ?? "");
-    setSerialNumber(assetToEdit.serial_number ?? "");
-    console.log("EDIT ASSET RAW:", assetToEdit);
-  }, [assetToEdit?.id]); // 👈 important change
-
-  
-
-
   return (
     <div
       style={{
@@ -89,7 +74,7 @@ export default function CreateAssetPanel({
         }}
         onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
       >
-        <h2>Edit Asset</h2>
+        <h2>Create New Asset</h2>
 
         <form onSubmit={handleSubmit}>
           <div>
