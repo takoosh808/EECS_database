@@ -6,7 +6,7 @@
 
 ```powershell
 POSTGRES_DB=eecsdb
-POSTGRES_USER=eecsuser
+POSTGRES_USER=eecsuser`
 POSTGRES_PASSWORD=eecs123
 DATABASE_URL="postgresql://eecsuser:eecs123@db:5432/eecsdb?schema=public"
 ```
