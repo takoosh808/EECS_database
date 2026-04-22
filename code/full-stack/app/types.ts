@@ -27,3 +27,16 @@ export type Asset =
     created_at?: string; 
     updated_at?: string;  
 }
+
+export type Lab = 
+{
+    id: string;
+    name: string;
+    created_at?: string;
+}
+
+export type Category = {
+    id: string;
+    name: string;
+    created_at?: string;
+}

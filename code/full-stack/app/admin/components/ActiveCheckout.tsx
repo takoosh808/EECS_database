@@ -14,7 +14,7 @@ export default function ActiveAssetsView({data}: Props)
 
     async function ApproveReturn(requestId: string)
     {
-         try{
+        try{
             const res = await fetch("/api/requests/return", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},

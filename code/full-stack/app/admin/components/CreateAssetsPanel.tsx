@@ -4,19 +4,17 @@ import { Lab } from "../../types";
 import LabCombobox from "./LabComboBox";
 import CategoryCombobox from "./CategoryComboBox";
 
-interface EditAssetPanelProps {
+interface CreateAssetPanelProps {
   onClose: () => void; // called when user closes panel
-  onEdit: (asset: Asset) => void; // called when user submits new asset
+  onCreate: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
-  assetToEdit: Asset;
 }
 
-export default function EditAssetPanel({
+export default function CreateAssetPanel({
   onClose,
-  onEdit,
+  onCreate,
   assets,
-  assetToEdit,
-}: EditAssetPanelProps) {
+}: CreateAssetPanelProps) {
   const [name, setName] = useState("");
   const [category_id, setCategoryId] = useState("");
   const [lab_id, setLabId] = useState("");
@@ -24,18 +22,18 @@ export default function EditAssetPanel({
   const [error, setError] = useState("");
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const updatedAsset: Asset = {
-    id: assetToEdit.id,
-    name,
-    category_id,
-    lab_id,
-    serial_number,
-    created_at: assetToEdit?.created_at,
-    updated_at: undefined,
-  };
-    
-  onEdit(updatedAsset);
-    
+
+    const newAsset: Asset = {
+      id: crypto.randomUUID(),
+      name,
+      category_id,
+      lab_id,
+      serial_number,
+      created_at: undefined,
+      updated_at: undefined,
+    };
+
+    onCreate(newAsset);
     onClose();
   };
 
@@ -49,19 +47,6 @@ export default function EditAssetPanel({
     loadLabs();
   }, []);
   console.log("labs:", labs);
-
-  useEffect(() => {
-    if (!assetToEdit) return;
-
-    setName(assetToEdit.name ?? "");
-    setCategoryId(assetToEdit.category_id ?? "");
-    setLabId(assetToEdit.lab_id ?? "");
-    setSerialNumber(assetToEdit.serial_number ?? "");
-    console.log("EDIT ASSET RAW:", assetToEdit);
-  }, [assetToEdit?.id]); // 👈 important change
-
-  
-
 
   return (
     <div
@@ -89,7 +74,7 @@ export default function EditAssetPanel({
         }}
         onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
       >
-        <h2>Edit Asset</h2>
+        <h2>Create New Asset</h2>
 
         <form onSubmit={handleSubmit}>
           <div>
@@ -139,7 +124,7 @@ export default function EditAssetPanel({
 
           <div style={{ marginTop: "10px" }}>
             <button className="cursor-pointer" type="submit">
-              Edit
+              Create
             </button>
 
             <button

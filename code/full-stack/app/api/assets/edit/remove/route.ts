@@ -3,7 +3,7 @@ import  pool  from "../../../../../db/init/db_index";
 import {Asset} from "../../../../types";
 import { broadcastEvent } from "../../../sse/route";
 
-//Function for adding new assets to the DB
+//Function for removing assets from the DB
 export async function POST(req: NextRequest) {
     try
     {
