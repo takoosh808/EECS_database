@@ -64,8 +64,14 @@ export async function POST(request: Request) {
 
     const nameColumn = await resolveNameColumn();
 
-    const result = await pool.query<{ id: string; user_name: string; email: string; password_hash: string }>(
-      `SELECT id::text AS id, ${nameColumn} AS user_name, email, password_hash
+    const result = await pool.query<{
+      id: string;
+      user_name: string;
+      email: string;
+      role: "user" | "admin";
+      password_hash: string;
+    }>(
+      `SELECT id::text AS id, ${nameColumn} AS user_name, email, role, password_hash
        FROM users
        WHERE lower(email) = $1
        LIMIT 1`,
@@ -84,6 +90,7 @@ export async function POST(request: Request) {
         id: user.id,
         name: user.user_name,
         email: user.email,
+        role: user.role,
       },
     });
 
