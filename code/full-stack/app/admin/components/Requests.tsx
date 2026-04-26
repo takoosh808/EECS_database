@@ -9,6 +9,7 @@ type Props = {
 export default function RequestsView({ data }: Props) {
   //Function for approving requests which calls aprove API route
   async function approveRequests(requestId: string) {
+    console.log("Attempting to approve request: ", requestId);
     try {
       const res = await fetch("/api/requests/approve", {
         method: "POST",

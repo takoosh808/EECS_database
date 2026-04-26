@@ -146,30 +146,29 @@ export default function ManageAssetsView() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 py-2">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">Asset Management</h1>
-        <p className="text-sm text-gray-600">
-          Search, filter, and browse assets. Click Details to view a full
-          description.
-        </p>
-      </header>
-      <div className="flex justify-end">
-        <div className="py-1 px-2 rounded-md">
-          <button
-            className="cursor-pointer"
-            onClick={() => setShowCreatePanel(true)}
-          >
-            Add New Asset
-          </button>
-          {showCreatePanel && (
-            <CreateAssetPanel
-              assets={assets}
-              onClose={() => setShowCreatePanel(false)}
-              onCreate={handleCreateAsset}
-            />
-          )}
-        </div>
+      <div className="flex items-start justify-between">
+        <header className="flex flex-col gap-2">
+          <h1 className="text-3xl font-semibold">Asset Management</h1>
+          <p className="text-sm text-gray-600">
+            Search, filter, and browse assets you want to edit or remove
+          </p>
+        </header>
+
+        <button
+          className="cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+          onClick={() => setShowCreatePanel(true)}
+        >
+          Add New Asset
+        </button>
       </div>
+
+      {showCreatePanel && (
+        <CreateAssetPanel
+          assets={assets}
+          onClose={() => setShowCreatePanel(false)}
+          onCreate={handleCreateAsset}
+        />
+      )}
       {/* Search + Filters */}
       <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -177,7 +176,7 @@ export default function ManageAssetsView() {
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search assets, location, or renter"
+            placeholder="Search assets, location, lab, etc"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
           />
 

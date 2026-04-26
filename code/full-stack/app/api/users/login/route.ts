@@ -1,12 +1,8 @@
 import { scryptSync, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import pool from "@/db/init/db_index";
 
 export const runtime = "nodejs";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 type LoginRequestBody = {
   email?: string;
@@ -19,7 +15,7 @@ async function resolveNameColumn(): Promise<"name" | "full_name"> {
      FROM information_schema.columns
      WHERE table_schema = 'public'
        AND table_name = 'users'
-       AND column_name IN ('name', 'full_name')`
+       AND column_name IN ('name', 'full_name')`,
   );
 
   const columns = new Set(result.rows.map((row) => row.column_name));
@@ -55,11 +51,17 @@ export async function POST(request: Request) {
     const password = body.password ?? "";
 
     if (!email) {
-      return NextResponse.json({ ok: false, message: "Email is required." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, message: "Email is required." },
+        { status: 400 },
+      );
     }
 
     if (!password) {
-      return NextResponse.json({ ok: false, message: "Password is required." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, message: "Password is required." },
+        { status: 400 },
+      );
     }
 
     const nameColumn = await resolveNameColumn();
@@ -75,12 +77,19 @@ export async function POST(request: Request) {
        FROM users
        WHERE lower(email) = $1
        LIMIT 1`,
-      [email]
+      [email],
     );
 
     const user = result.rows[0];
-    if (!user || !user.password_hash || !verifyPassword(password, user.password_hash)) {
-      return NextResponse.json({ ok: false, message: "Invalid email or password." }, { status: 401 });
+    if (
+      !user ||
+      !user.password_hash ||
+      !verifyPassword(password, user.password_hash)
+    ) {
+      return NextResponse.json(
+        { ok: false, message: "Invalid email or password." },
+        { status: 401 },
+      );
     }
 
     const response = NextResponse.json({
@@ -110,7 +119,7 @@ export async function POST(request: Request) {
         message: "Login failed.",
         error: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

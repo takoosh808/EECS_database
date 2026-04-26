@@ -118,16 +118,15 @@ export default function AdminDashboard() {
           <a>Manage assets and handle asset requests</a>
         </div>
       </header>
-      <div className="flex justify-end">
+      <div className="mx-auto px-100 py-4 flex justify-end">
         <button
           type="button"
           onClick={() => router.push("/home")}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+          className=" cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
         >
           Back to Home
         </button>
       </div>
-
       <div>
         <div className="max-w-6xl mx-auto">
           <div className="flex text-sm font-medium bg-gray-200 p-1 rounded-md w-fit">
