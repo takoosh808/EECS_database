@@ -5,7 +5,7 @@ import AssetHistoryView from "./components/RequestHistory";
 import RequestsView from "./components/Requests";
 import { AssetCheckout, Asset } from "../types";
 import { useEffect, useState, useCallback } from "react";
-
+import { useRouter } from "next/navigation";
 import NewManageAssetsView from "./components/NewManageAssets";
 
 export default function AdminDashboard() {
@@ -14,7 +14,21 @@ export default function AdminDashboard() {
   const [inactive, setInactive] = useState<AssetCheckout[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
   const [activeButton, setActiveButton] = useState("requests");
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   const userRole = localStorage.getItem("userRole");
+  //   if (userRole !== "admin") {
+  //     router.push("/home");
+  //     return;
+  //   }
+  //   setIsAuthorized(true);
+  //   setIsChecking(false);
+  // }, [router]);
 
   const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
@@ -89,6 +103,9 @@ export default function AdminDashboard() {
       if (data.type === "ADD_ASSET") {
         fetchAssets();
       }
+      if (data.type === "REQUEST_CREATED") {
+        fetchRequests();
+      }
     };
     return () => evtSource.close();
   }, [fetchRequests, fetchActive, fetchInactive, fetchAssets]);
@@ -101,6 +118,15 @@ export default function AdminDashboard() {
           <a>Manage assets and handle asset requests</a>
         </div>
       </header>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => router.push("/home")}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          Back to Home
+        </button>
+      </div>
 
       <div>
         <div className="max-w-6xl mx-auto">

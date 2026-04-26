@@ -12,6 +12,12 @@ type LoginResponse = {
   ok: boolean;
   message: string;
   error?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: "user" | "admin";
+  };
 };
 
 export default function LoginPage() {
@@ -69,6 +75,9 @@ export default function LoginPage() {
       }
 
       setMessage(payload.message || "Login successful.");
+      if (payload.user?.role) {
+        localStorage.setItem("userRole", payload.user.role);
+      }
       router.push("/home");
     } catch (submitError) {
       setError((submitError as Error).message || "Login failed.");
@@ -120,9 +129,6 @@ export default function LoginPage() {
           {message && <p className="text-sm text-green-600">{message}</p>}
         </form>
 
-        <a className="w-fit text-sm underline" href="/register">
-          Create new user
-        </a>
       </main>
     </div>
   );
