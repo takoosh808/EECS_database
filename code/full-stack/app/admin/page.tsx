@@ -5,9 +5,8 @@ import AssetHistoryView from "./components/RequestHistory";
 import RequestsView from "./components/Requests";
 import { AssetCheckout, Asset } from "../types";
 import { useEffect, useState, useCallback } from "react";
-import EditAssetsView from "./components/ManageAssets";
-import CreateAssetsPanel from "./components/CreateAssetsPanel";
-import ManageAssetsView from "./components/NewManageAssets";
+
+import NewManageAssetsView from "./components/NewManageAssets";
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<AssetCheckout[]>([]);
@@ -16,23 +15,6 @@ export default function AdminDashboard() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
   const [activeButton, setActiveButton] = useState("requests");
-
-  const handleCreateAsset = (newAsset: Asset) => {
-    // send to backend
-    //we need to do checks here whenever a new asset is created.
-
-    //first we need to check the fields that are referenced
-
-    fetch("/api/assets/edit/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newAsset),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setAssets([...assets, newAsset]);
-      });
-  };
 
   const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
@@ -50,7 +32,7 @@ export default function AdminDashboard() {
     const res = await fetch("/api/requests/active");
     if (!res.ok) {
       console.error("API failed:", res.status);
-      setActive([]); // prevent crash
+      setActive([]);
       return;
     }
     const data = await res.json();
@@ -148,7 +130,7 @@ export default function AdminDashboard() {
                 <AssetHistoryView data={inactive} />
               </>
             )}
-            {activeButton === "assets" && <ManageAssetsView />}
+            {activeButton === "assets" && <NewManageAssetsView />}
           </div>
         </div>
       </div>
