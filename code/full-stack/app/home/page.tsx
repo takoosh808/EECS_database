@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 
 type AssetRow = {
@@ -12,6 +12,33 @@ type AssetRow = {
   rentedOutAt: string | null;
   description: string;
 };
+
+type ApiAsset = {
+  id: string;
+  name: string;
+  lab_id: string;
+  serial_number: string;
+};
+
+type ActiveCheckout = {
+  asset_id: string;
+  user_id: string;
+  request_date: string | null;
+  request_details?: string | null;
+};
+
+type LabOption = {
+  id: string;
+  name: string;
+};
+
+function parseLabFromRequestDetails(details: string | null | undefined): string | null {
+  if (!details) {
+    return null;
+  }
+  const match = details.match(/Lab:\s*([^|]+)/i);
+  return match?.[1]?.trim() ?? null;
+}
 
 const SAMPLE_ASSETS: AssetRow[] = [
   {
@@ -44,6 +71,8 @@ const SAMPLE_ASSETS: AssetRow[] = [
 ];
 
 export default function UserHomePage() {
+  const [assets, setAssets] = useState<AssetRow[]>(SAMPLE_ASSETS);
+  const [labs, setLabs] = useState<LabOption[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
@@ -52,13 +81,85 @@ export default function UserHomePage() {
   const [requesterName, setRequesterName] = useState("");
   const [requestLab, setRequestLab] = useState("");
   const [requestReason, setRequestReason] = useState("");
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDashboardAssets() {
+      try {
+        const [assetsResponse, activeResponse, labsResponse] = await Promise.all([
+          fetch("/api/assets/get"),
+          fetch("/api/requests/active"),
+          fetch("/api/labs/get"),
+        ]);
+
+        if (!assetsResponse.ok || !activeResponse.ok || !labsResponse.ok) {
+          return;
+        }
+
+        const rows = (await assetsResponse.json()) as ApiAsset[];
+        const activeRowsRaw = (await activeResponse.json()) as unknown;
+        const activeRows = Array.isArray(activeRowsRaw) ? (activeRowsRaw as ActiveCheckout[]) : [];
+        const labsRaw = (await labsResponse.json()) as unknown;
+        const labList = Array.isArray(labsRaw) ? (labsRaw as LabOption[]) : [];
+
+        const activeByAssetId = new Map(activeRows.map((row) => [row.asset_id, row]));
+        const labNameById = new Map(labList.map((lab) => [lab.id, lab.name]));
+
+        const mapped: AssetRow[] = rows.map((row) => {
+          const active = activeByAssetId.get(row.id);
+          const requestedLab = parseLabFromRequestDetails(active?.request_details);
+          return {
+            id: row.id,
+            name: row.name,
+            location: requestedLab ?? labNameById.get(row.lab_id) ?? row.lab_id,
+            rentedOut: Boolean(active),
+            rentedTo: active?.user_id ?? null,
+            rentedOutAt: active?.request_date ?? null,
+            description: `Serial: ${row.serial_number}`,
+          };
+        });
+        if (!cancelled && mapped.length > 0) {
+          setAssets(mapped);
+          setLabs(labList);
+        }
+      } catch {
+        // Keep sample assets if backend is unavailable.
+      }
+    }
+
+    loadDashboardAssets();
+
+    const evtSource = new EventSource("/api/sse");
+    evtSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as { type?: string };
+        if (
+          data.type === "APPROVE" ||
+          data.type === "RETURNED" ||
+          data.type === "ADD_ASSET" ||
+          data.type === "REMOVE_ASSET"
+        ) {
+          loadDashboardAssets();
+        }
+      } catch {
+        // Ignore malformed event payloads.
+      }
+    };
+
+    return () => {
+      cancelled = true;
+      evtSource.close();
+    };
+  }, []);
 
   const filteredAssets = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase();
 
-    return SAMPLE_ASSETS.filter((asset) => {
+    return assets.filter((asset) => {
       if (onlyRentedOut && !asset.rentedOut) {
         return false;
       }
@@ -70,7 +171,7 @@ export default function UserHomePage() {
       const haystack = [asset.name, asset.location, asset.rentedTo ?? ""].join(" ").toLowerCase();
       return haystack.includes(normalized);
     });
-  }, [searchQuery, onlyRentedOut]);
+  }, [assets, searchQuery, onlyRentedOut]);
 
   return (
     <DashboardShell>
@@ -156,15 +257,19 @@ export default function UserHomePage() {
                     <button
                       type="button"
                       onClick={() => {
+                        if (asset.rentedOut) {
+                          return;
+                        }
                         setRequestAsset(asset);
                         setRequestError(null);
                         setRequesterName("");
                         setRequestLab("");
                         setRequestReason("");
                       }}
-                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+                      disabled={asset.rentedOut}
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Request Asset
+                      {asset.rentedOut ? "Unavailable" : "Request Asset"}
                     </button>
                     {requestConfirmationByAsset[asset.id] && (
                       <p className="mt-2 text-xs text-green-700">{requestConfirmationByAsset[asset.id]}</p>
@@ -219,7 +324,7 @@ export default function UserHomePage() {
 
             <form
               className="mt-4 space-y-3"
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 event.preventDefault();
                 setRequestError(null);
 
@@ -228,11 +333,36 @@ export default function UserHomePage() {
                   return;
                 }
 
-                setRequestConfirmationByAsset((previous) => ({
-                  ...previous,
-                  [requestAsset.id]: "Request submitted successfully.",
-                }));
-                setRequestAsset(null);
+                try {
+                  setRequestSubmitting(true);
+                  const response = await fetch("/api/requests", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      assetId: requestAsset.id,
+                      requesterName,
+                      lab: requestLab,
+                      reason: requestReason,
+                    }),
+                  });
+
+                  const payload = (await response.json()) as { error?: string };
+                  if (!response.ok) {
+                    throw new Error(payload.error ?? "Failed to submit request.");
+                  }
+
+                  setRequestConfirmationByAsset((previous) => ({
+                    ...previous,
+                    [requestAsset.id]: "Request submitted successfully.",
+                  }));
+                  setRequestAsset(null);
+                } catch (error) {
+                  setRequestError((error as Error).message || "Failed to submit request.");
+                } finally {
+                  setRequestSubmitting(false);
+                }
               }}
             >
               <div>
@@ -252,13 +382,19 @@ export default function UserHomePage() {
                 <label htmlFor="request-lab" className="mb-1 block text-sm font-medium text-gray-800">
                   Lab
                 </label>
-                <input
+                <select
                   id="request-lab"
                   value={requestLab}
                   onChange={(event) => setRequestLab(event.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-                  placeholder="Your lab"
-                />
+                >
+                  <option value="">Select a lab</option>
+                  {labs.map((lab) => (
+                    <option key={lab.id} value={lab.name}>
+                      {lab.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -286,9 +422,10 @@ export default function UserHomePage() {
                 </button>
                 <button
                   type="submit"
+                  disabled={requestSubmitting}
                   className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
                 >
-                  Submit Request
+                  {requestSubmitting ? "Submitting..." : "Submit Request"}
                 </button>
               </div>
             </form>

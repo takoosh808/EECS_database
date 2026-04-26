@@ -36,7 +36,7 @@ function verifyPassword(password: string, encodedHash: string): boolean {
     return false;
   }
 
-  const salt = parts[1];
+  const salt = Buffer.from(parts[1], "hex");
   const storedHex = parts[2];
   const calculated = scryptSync(password, salt, 64);
   const stored = Buffer.from(storedHex, "hex");
