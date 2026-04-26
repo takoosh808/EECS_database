@@ -20,15 +20,15 @@ export default function AdminDashboard() {
   const [activeButton, setActiveButton] = useState("requests");
   const router = useRouter();
 
-  // useEffect(() => {
-  //   const userRole = localStorage.getItem("userRole");
-  //   if (userRole !== "admin") {
-  //     router.push("/home");
-  //     return;
-  //   }
-  //   setIsAuthorized(true);
-  //   setIsChecking(false);
-  // }, [router]);
+  useEffect(() => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole !== "admin") {
+      router.push("/home");
+      return;
+    }
+    setIsAuthorized(true);
+    setIsChecking(false);
+  }, [router]);
 
   const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
