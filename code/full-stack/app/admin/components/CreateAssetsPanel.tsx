@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Asset } from "../../types";
 import { Lab } from "../../types";
 import LabCombobox from "./LabComboBox";
@@ -20,6 +20,11 @@ export default function CreateAssetPanel({
   const [lab_id, setLabId] = useState("");
   const [serial_number, setSerialNumber] = useState("");
   const [error, setError] = useState("");
+  const [description, setDescription] = useState("");
+  const [image_url, setImageUrl] = useState("");
+  const [location, setLocation] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -28,6 +33,9 @@ export default function CreateAssetPanel({
       name,
       category_id,
       lab_id,
+      description,
+      image_url,
+      location,
       serial_number,
       created_at: undefined,
       updated_at: undefined,
@@ -48,6 +56,13 @@ export default function CreateAssetPanel({
   }, []);
   console.log("labs:", labs);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFile(file);
+    setImageUrl(URL.createObjectURL(file));
+  };
+
   return (
     <div
       style={{
@@ -67,6 +82,7 @@ export default function CreateAssetPanel({
       <div
         style={{
           width: "400px",
+          height: "600px",
           backgroundColor: "#fff",
           borderRadius: "8px",
           padding: "20px",
@@ -77,16 +93,40 @@ export default function CreateAssetPanel({
         <h2>Create New Asset</h2>
 
         <form onSubmit={handleSubmit}>
+          <div className="flex justify-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            ></input>
+            <button
+              type="button"
+              onClick={() => {
+                fileInputRef.current?.click();
+              }}
+              className="cursor-pointer"
+            >
+              <img
+                src={image_url || "/globe.svg"}
+                alt="upload"
+                className="w-50 h-50"
+              ></img>
+            </button>
+          </div>
           <div>
             <label>Name:</label>
+
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="border border-gray-200 rounded-md"
             />
           </div>
 
-          <div>
+          <div className="flex items-center gap-1">
             <label>Category:</label>
             <CategoryCombobox
               value={category_id}
@@ -94,7 +134,7 @@ export default function CreateAssetPanel({
             />
           </div>
 
-          <div>
+          <div className="flex items-center gap-1">
             <label>Lab:</label>
             <LabCombobox value={lab_id} onChange={(id) => setLabId(id)} />
           </div>
@@ -104,6 +144,7 @@ export default function CreateAssetPanel({
             <input
               type="text"
               value={serial_number}
+              className="border border-gray-200 rounded-md"
               onChange={(e) => {
                 const value = e.target.value;
                 setSerialNumber(value);
@@ -120,6 +161,29 @@ export default function CreateAssetPanel({
             />
 
             {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
+          </div>
+          <div>
+            <label>Description: </label>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{ width: "100%" }}
+              className="border border-gray-200 rounded-md"
+              maxLength={250}
+            ></textarea>
+            <p style={{ fontSize: "12px", color: "gray" }}>
+              {description.length}/250
+            </p>
+          </div>
+          <div>
+            <label>Location: </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="border border-gray-200 rounded-md"
+            ></input>
           </div>
 
           <div style={{ marginTop: "10px" }}>

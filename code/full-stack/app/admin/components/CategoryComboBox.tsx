@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Category } from "@/app/types";
+import { Catamaran } from "next/font/google";
 
 interface Props {
   value: string;
@@ -22,6 +23,10 @@ export default function CategoryCombobox({ value, onChange }: Props) {
 
   const filtered = categories.filter((category) =>
     category.name.toLowerCase().includes(query.toLocaleLowerCase()),
+  );
+
+  const exactMatch = categories.some(
+    (category) => category.name.toLowerCase() === query.toLowerCase(),
   );
 
   const selectCategory = (category: Category) => {
@@ -58,52 +63,37 @@ export default function CategoryCombobox({ value, onChange }: Props) {
   }, [value, categories]);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="relative w-[79%] border border-gray-200 rounded-md">
       <input
+        className="w-full p-2 rounded-md outline-none"
         value={query}
         placeholder="Search or create category"
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
 
-          // clear selection if typing something new
-          const match = categories.find((l) => l.name === e.target.value);
-          onChange(match ? match.id : "");
+          setQuery(e.target.value);
+          setOpen(true);
         }}
         onFocus={() => setOpen(true)}
       />
 
       {open && query && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            border: "1px solid #ccc",
-            background: "white",
-            zIndex: 10,
-          }}
-        >
+        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-md z-10">
           {filtered.map((category) => (
             <div
               key={category.id}
               onClick={() => selectCategory(category)}
-              style={{ padding: 8, cursor: "pointer" }}
+              className="p-2 cursor-pointer hover:bg-gray-100"
             >
               {category.name}
             </div>
           ))}
 
-          {filtered.length === 0 && (
+          {!exactMatch && query && (
             <div
               onClick={createCategory}
-              style={{
-                padding: 8,
-                cursor: "pointer",
-                fontWeight: "bold",
-                borderTop: "1px solid #ddd",
-              }}
+              className="p-2 cursor-pointer font-semibold border-t border-gray-200 hover:bg-gray-100"
             >
               Create "{query}"
             </div>

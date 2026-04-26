@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS assets (
   lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
   --category_id TEXT NOT NULL,
   --lab_id TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT,
+  location TEXT,
   serial_number TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
