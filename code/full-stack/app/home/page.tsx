@@ -2,16 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
-
-type AssetRow = {
-  id: string;
-  name: string;
-  location: string;
-  rentedOut: boolean;
-  rentedTo: string | null;
-  rentedOutAt: string | null;
-  description: string;
-};
+import { AssetRow } from "@/app/types";
 
 type ApiAsset = {
   id: string;
@@ -32,7 +23,9 @@ type LabOption = {
   name: string;
 };
 
-function parseLabFromRequestDetails(details: string | null | undefined): string | null {
+function parseLabFromRequestDetails(
+  details: string | null | undefined,
+): string | null {
   if (!details) {
     return null;
   }
@@ -66,9 +59,34 @@ const SAMPLE_ASSETS: AssetRow[] = [
     rentedOut: true,
     rentedTo: "Jordan Lee",
     rentedOutAt: "2026-03-30",
-    description: "Nozzle set, maintenance tools, and replacement filament holders.",
+    description:
+      "Nozzle set, maintenance tools, and replacement filament holders.",
   },
 ];
+
+export function filterAssets(
+  assets: AssetRow[],
+  searchQuery: string,
+  onlyRentedOut: boolean,
+) {
+  const normalized = searchQuery.trim().toLowerCase();
+
+  return assets.filter((asset) => {
+    if (onlyRentedOut && !asset.rentedOut) {
+      return false;
+    }
+
+    if (!normalized) {
+      return true;
+    }
+
+    const haystack = [asset.name, asset.location, asset.rentedTo ?? ""]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(normalized);
+  });
+}
 
 export default function UserHomePage() {
   const [assets, setAssets] = useState<AssetRow[]>(SAMPLE_ASSETS);
@@ -83,18 +101,21 @@ export default function UserHomePage() {
   const [requestReason, setRequestReason] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<Record<string, string>>({});
+  const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadDashboardAssets() {
       try {
-        const [assetsResponse, activeResponse, labsResponse] = await Promise.all([
-          fetch("/api/assets/get"),
-          fetch("/api/requests/active"),
-          fetch("/api/labs/get"),
-        ]);
+        const [assetsResponse, activeResponse, labsResponse] =
+          await Promise.all([
+            fetch("/api/assets/get"),
+            fetch("/api/requests/active"),
+            fetch("/api/labs/get"),
+          ]);
 
         if (!assetsResponse.ok || !activeResponse.ok || !labsResponse.ok) {
           return;
@@ -102,16 +123,22 @@ export default function UserHomePage() {
 
         const rows = (await assetsResponse.json()) as ApiAsset[];
         const activeRowsRaw = (await activeResponse.json()) as unknown;
-        const activeRows = Array.isArray(activeRowsRaw) ? (activeRowsRaw as ActiveCheckout[]) : [];
+        const activeRows = Array.isArray(activeRowsRaw)
+          ? (activeRowsRaw as ActiveCheckout[])
+          : [];
         const labsRaw = (await labsResponse.json()) as unknown;
         const labList = Array.isArray(labsRaw) ? (labsRaw as LabOption[]) : [];
 
-        const activeByAssetId = new Map(activeRows.map((row) => [row.asset_id, row]));
+        const activeByAssetId = new Map(
+          activeRows.map((row) => [row.asset_id, row]),
+        );
         const labNameById = new Map(labList.map((lab) => [lab.id, lab.name]));
 
         const mapped: AssetRow[] = rows.map((row) => {
           const active = activeByAssetId.get(row.id);
-          const requestedLab = parseLabFromRequestDetails(active?.request_details);
+          const requestedLab = parseLabFromRequestDetails(
+            active?.request_details,
+          );
           return {
             id: row.id,
             name: row.name,
@@ -156,22 +183,10 @@ export default function UserHomePage() {
     };
   }, []);
 
-  const filteredAssets = useMemo(() => {
-    const normalized = searchQuery.trim().toLowerCase();
-
-    return assets.filter((asset) => {
-      if (onlyRentedOut && !asset.rentedOut) {
-        return false;
-      }
-
-      if (!normalized) {
-        return true;
-      }
-
-      const haystack = [asset.name, asset.location, asset.rentedTo ?? ""].join(" ").toLowerCase();
-      return haystack.includes(normalized);
-    });
-  }, [assets, searchQuery, onlyRentedOut]);
+  const filteredAssets = useMemo(
+    () => filterAssets(assets, searchQuery, onlyRentedOut),
+    [assets, searchQuery, onlyRentedOut],
+  );
 
   return (
     <DashboardShell>
@@ -179,7 +194,8 @@ export default function UserHomePage() {
         <header className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold">Asset Dashboard</h1>
           <p className="text-sm text-gray-600">
-            Search, filter, and browse assets. Click Details to view a full description.
+            Search, filter, and browse assets. Click Details to view a full
+            description.
           </p>
         </header>
 
@@ -231,7 +247,10 @@ export default function UserHomePage() {
             <tbody>
               {filteredAssets.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-gray-500" colSpan={7}>
+                  <td
+                    className="px-4 py-6 text-center text-gray-500"
+                    colSpan={7}
+                  >
                     No assets match your search/filter.
                   </td>
                 </tr>
@@ -241,7 +260,9 @@ export default function UserHomePage() {
                 <tr key={asset.id} className="border-t border-gray-200">
                   <td className="px-4 py-3">{asset.name}</td>
                   <td className="px-4 py-3">{asset.location}</td>
-                  <td className="px-4 py-3">{asset.rentedOut ? "Yes" : "No"}</td>
+                  <td className="px-4 py-3">
+                    {asset.rentedOut ? "Yes" : "No"}
+                  </td>
                   <td className="px-4 py-3">{asset.rentedTo ?? "-"}</td>
                   <td className="px-4 py-3">{asset.rentedOutAt ?? "-"}</td>
                   <td className="px-4 py-3">
@@ -272,7 +293,9 @@ export default function UserHomePage() {
                       {asset.rentedOut ? "Unavailable" : "Request Asset"}
                     </button>
                     {requestConfirmationByAsset[asset.id] && (
-                      <p className="mt-2 text-xs text-green-700">{requestConfirmationByAsset[asset.id]}</p>
+                      <p className="mt-2 text-xs text-green-700">
+                        {requestConfirmationByAsset[asset.id]}
+                      </p>
                     )}
                   </td>
                 </tr>
@@ -286,20 +309,26 @@ export default function UserHomePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-lg">
             <h2 className="text-xl font-semibold">{selectedAsset.name}</h2>
-            <p className="mt-2 text-sm text-gray-700">{selectedAsset.description}</p>
+            <p className="mt-2 text-sm text-gray-700">
+              {selectedAsset.description}
+            </p>
 
             <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-gray-700 sm:grid-cols-2">
               <p>
-                <span className="font-medium">Location:</span> {selectedAsset.location}
+                <span className="font-medium">Location:</span>{" "}
+                {selectedAsset.location}
               </p>
               <p>
-                <span className="font-medium">Rented:</span> {selectedAsset.rentedOut ? "Yes" : "No"}
+                <span className="font-medium">Rented:</span>{" "}
+                {selectedAsset.rentedOut ? "Yes" : "No"}
               </p>
               <p>
-                <span className="font-medium">Rented To:</span> {selectedAsset.rentedTo ?? "-"}
+                <span className="font-medium">Rented To:</span>{" "}
+                {selectedAsset.rentedTo ?? "-"}
               </p>
               <p>
-                <span className="font-medium">Rented On:</span> {selectedAsset.rentedOutAt ?? "-"}
+                <span className="font-medium">Rented On:</span>{" "}
+                {selectedAsset.rentedOutAt ?? "-"}
               </p>
             </div>
 
@@ -320,7 +349,9 @@ export default function UserHomePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-lg">
             <h2 className="text-xl font-semibold">Request Asset</h2>
-            <p className="mt-1 text-sm text-gray-700">Asset: {requestAsset.name}</p>
+            <p className="mt-1 text-sm text-gray-700">
+              Asset: {requestAsset.name}
+            </p>
 
             <form
               className="mt-4 space-y-3"
@@ -328,7 +359,11 @@ export default function UserHomePage() {
                 event.preventDefault();
                 setRequestError(null);
 
-                if (!requesterName.trim() || !requestLab.trim() || !requestReason.trim()) {
+                if (
+                  !requesterName.trim() ||
+                  !requestLab.trim() ||
+                  !requestReason.trim()
+                ) {
                   setRequestError("Please fill out name, lab, and reason.");
                   return;
                 }
@@ -350,7 +385,9 @@ export default function UserHomePage() {
 
                   const payload = (await response.json()) as { error?: string };
                   if (!response.ok) {
-                    throw new Error(payload.error ?? "Failed to submit request.");
+                    throw new Error(
+                      payload.error ?? "Failed to submit request.",
+                    );
                   }
 
                   setRequestConfirmationByAsset((previous) => ({
@@ -359,14 +396,19 @@ export default function UserHomePage() {
                   }));
                   setRequestAsset(null);
                 } catch (error) {
-                  setRequestError((error as Error).message || "Failed to submit request.");
+                  setRequestError(
+                    (error as Error).message || "Failed to submit request.",
+                  );
                 } finally {
                   setRequestSubmitting(false);
                 }
               }}
             >
               <div>
-                <label htmlFor="request-name" className="mb-1 block text-sm font-medium text-gray-800">
+                <label
+                  htmlFor="request-name"
+                  className="mb-1 block text-sm font-medium text-gray-800"
+                >
                   Name
                 </label>
                 <input
@@ -379,7 +421,10 @@ export default function UserHomePage() {
               </div>
 
               <div>
-                <label htmlFor="request-lab" className="mb-1 block text-sm font-medium text-gray-800">
+                <label
+                  htmlFor="request-lab"
+                  className="mb-1 block text-sm font-medium text-gray-800"
+                >
                   Lab
                 </label>
                 <select
@@ -398,7 +443,10 @@ export default function UserHomePage() {
               </div>
 
               <div>
-                <label htmlFor="request-reason" className="mb-1 block text-sm font-medium text-gray-800">
+                <label
+                  htmlFor="request-reason"
+                  className="mb-1 block text-sm font-medium text-gray-800"
+                >
                   Reason For Request
                 </label>
                 <textarea
@@ -410,7 +458,9 @@ export default function UserHomePage() {
                 />
               </div>
 
-              {requestError && <p className="text-sm text-red-600">{requestError}</p>}
+              {requestError && (
+                <p className="text-sm text-red-600">{requestError}</p>
+              )}
 
               <div className="flex justify-end gap-2">
                 <button

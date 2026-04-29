@@ -48,3 +48,13 @@ export type Category = {
   name: string;
   created_at?: string;
 };
+
+export type AssetRow = {
+  id: string;
+  name: string;
+  location: string;
+  rentedOut: boolean;
+  rentedTo: string | null;
+  rentedOutAt: string | null;
+  description: string;
+};
