@@ -1,7 +1,7 @@
 # Sprint 3 Report (3/24/2026-5/1/2026)
 
 ## video link
-
+https://youtu.be/L8i-Dc-xs5Q
 
 ## What's New (User Facing)
  * Homepage UI improvement
