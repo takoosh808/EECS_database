@@ -15,6 +15,13 @@ ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 RUN npm run build
 
+# Runnable image that keeps devDependencies and test sources for `docker compose run test`
+FROM node:20-alpine AS test
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+CMD ["npm", "run", "test"]
+
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

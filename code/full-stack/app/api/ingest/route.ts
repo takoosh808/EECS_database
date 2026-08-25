@@ -16,26 +16,18 @@ type IngestionError = {
 type AssetIngestRow = {
   rowNumber: number;
   name: string;
-  categoryName: string | null;
-  categoryId: string | null;
-  labName: string | null;
-  labId: string | null;
+  categoryName: string;
+  labName: string;
   serialNumber: string;
-  checkedOut: boolean;
-  checkedOutTo: string | null;
 };
 
 type ResolvedAssetIngestRow = AssetIngestRow & {
-  categoryName: string;
   categoryId: string;
-  labName: string;
   labId: string;
 };
 
-const REQUIRED_HEADERS = ["name", "serial_number"] as const;
-const CATEGORY_REFERENCE_HEADERS = ["category_name", "category_id"] as const;
-const LAB_REFERENCE_HEADERS = ["lab_name", "lab_id"] as const;
-const OPTIONAL_HEADERS = ["checked_out", "checked_out_to"] as const;
+const REQUIRED_HEADERS = ["name", "category_name", "lab_name", "serial_number"] as const;
+const ALLOWED_HEADERS = new Set<string>(REQUIRED_HEADERS);
 
 function parseCsv(content: string): string[][] {
   const rows: string[][] = [];
@@ -93,27 +85,6 @@ function normalizeHeader(header: string): string {
   return header.trim().toLowerCase();
 }
 
-function parseBoolean(value: string | undefined): boolean | null {
-  if (value === undefined) {
-    return false;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "") {
-    return false;
-  }
-
-  if (["true", "t", "1", "yes", "y"].includes(normalized)) {
-    return true;
-  }
-
-  if (["false", "f", "0", "no", "n"].includes(normalized)) {
-    return false;
-  }
-
-  return null;
-}
-
 function cellValue(cells: string[], headerMap: Map<string, number>, header: string): string {
   const position = headerMap.get(header);
   if (position === undefined) {
@@ -158,43 +129,7 @@ function validateRows(csvRows: string[][]): {
     };
   }
 
-  const hasCategoryNameHeader = headerMap.has("category_name");
-  const hasCategoryIdHeader = headerMap.has("category_id");
-  if (!hasCategoryNameHeader && !hasCategoryIdHeader) {
-    return {
-      rows: [],
-      errors: [
-        {
-          row: 1,
-          field: "headers",
-          message: "Missing required header: provide category_name or category_id.",
-        },
-      ],
-    };
-  }
-
-  const hasLabNameHeader = headerMap.has("lab_name");
-  const hasLabIdHeader = headerMap.has("lab_id");
-  if (!hasLabNameHeader && !hasLabIdHeader) {
-    return {
-      rows: [],
-      errors: [
-        {
-          row: 1,
-          field: "headers",
-          message: "Missing required header: provide lab_name or lab_id.",
-        },
-      ],
-    };
-  }
-
-  const allowedHeaders = new Set<string>([
-    ...REQUIRED_HEADERS,
-    ...CATEGORY_REFERENCE_HEADERS,
-    ...LAB_REFERENCE_HEADERS,
-    ...OPTIONAL_HEADERS,
-  ]);
-  const invalidHeaders = headerRow.filter((header) => header && !allowedHeaders.has(header));
+  const invalidHeaders = headerRow.filter((header) => header && !ALLOWED_HEADERS.has(header));
   if (invalidHeaders.length > 0) {
     return {
       rows: [],
@@ -220,44 +155,25 @@ function validateRows(csvRows: string[][]): {
     }
 
     const name = cellValue(cells, headerMap, "name");
-    const categoryNameRaw = cellValue(cells, headerMap, "category_name");
-    const categoryIdRaw = cellValue(cells, headerMap, "category_id");
-    const labNameRaw = cellValue(cells, headerMap, "lab_name");
-    const labIdRaw = cellValue(cells, headerMap, "lab_id");
+    const categoryName = cellValue(cells, headerMap, "category_name");
+    const labName = cellValue(cells, headerMap, "lab_name");
     const serialNumber = cellValue(cells, headerMap, "serial_number");
-    const checkedOutRaw = cellValue(cells, headerMap, "checked_out");
-    const checkedOutToRaw = cellValue(cells, headerMap, "checked_out_to");
-
-    const categoryName = categoryNameRaw === "" ? null : categoryNameRaw;
-    const categoryId = categoryIdRaw === "" ? null : categoryIdRaw;
-    const labName = labNameRaw === "" ? null : labNameRaw;
-    const labId = labIdRaw === "" ? null : labIdRaw;
 
     if (!name) {
       errors.push({ row: rowNumber, field: "name", message: "name is required." });
     }
 
-    if (!categoryName && !categoryId) {
-      errors.push({
-        row: rowNumber,
-        field: "category_name/category_id",
-        message: "Provide category_name or category_id.",
-      });
+    if (!categoryName) {
+      errors.push({ row: rowNumber, field: "category_name", message: "category_name is required." });
     }
 
-    if (!labName && !labId) {
-      errors.push({
-        row: rowNumber,
-        field: "lab_name/lab_id",
-        message: "Provide lab_name or lab_id.",
-      });
+    if (!labName) {
+      errors.push({ row: rowNumber, field: "lab_name", message: "lab_name is required." });
     }
 
     if (!serialNumber) {
       errors.push({ row: rowNumber, field: "serial_number", message: "serial_number is required." });
-    }
-
-    if (serialNumber) {
+    } else {
       const previousRow = serialToRow.get(serialNumber);
       if (previousRow !== undefined) {
         errors.push({
@@ -270,44 +186,12 @@ function validateRows(csvRows: string[][]): {
       }
     }
 
-    const checkedOut = parseBoolean(checkedOutRaw);
-    if (checkedOut === null) {
-      errors.push({
-        row: rowNumber,
-        field: "checked_out",
-        message: `Invalid boolean value: ${checkedOutRaw}. Use true/false.`,
-      });
-      continue;
-    }
-
-    const checkedOutTo = checkedOutToRaw === "" ? null : checkedOutToRaw;
-
-    if (!checkedOut && checkedOutTo !== null) {
-      errors.push({
-        row: rowNumber,
-        field: "checked_out_to",
-        message: "checked_out_to must be empty when checked_out is false.",
-      });
-    }
-
-    if (checkedOut && checkedOutTo === null) {
-      errors.push({
-        row: rowNumber,
-        field: "checked_out_to",
-        message: "checked_out_to is required when checked_out is true.",
-      });
-    }
-
     parsedRows.push({
       rowNumber,
       name,
       categoryName,
-      categoryId,
       labName,
-      labId,
       serialNumber,
-      checkedOut,
-      checkedOutTo,
     });
   }
 
@@ -317,119 +201,99 @@ function validateRows(csvRows: string[][]): {
   };
 }
 
-async function resolveForeignKeys(
-  rows: AssetIngestRow[]
-): Promise<{ resolvedRows: ResolvedAssetIngestRow[]; errors: IngestionError[] }> {
-  const errors: IngestionError[] = [];
+async function getOrCreateCategory(name: string): Promise<{ id: string; name: string }> {
+  const existing = await pool.query<{ id: string; name: string }>(
+    `SELECT id::text AS id, name
+     FROM categories
+     WHERE name = $1
+     LIMIT 1`,
+    [name]
+  );
 
-  const categoryNames = [
-    ...new Set(rows.map((row) => row.categoryName).filter((value): value is string => value !== null)),
-  ];
-  const categoryIds = [
-    ...new Set(rows.map((row) => row.categoryId).filter((value): value is string => value !== null)),
-  ];
-  const labNames = [...new Set(rows.map((row) => row.labName).filter((value): value is string => value !== null))];
-  const labIds = [...new Set(rows.map((row) => row.labId).filter((value): value is string => value !== null))];
-
-  const categoryRows: { id: string; name: string }[] =
-    categoryNames.length === 0 && categoryIds.length === 0
-      ? []
-      : (
-          await pool.query<{ id: string; name: string }>(
-            `SELECT id::text AS id, name
-             FROM categories
-             WHERE ($1::text[] IS NOT NULL AND name = ANY($1::text[]))
-                OR ($2::text[] IS NOT NULL AND id::text = ANY($2::text[]))`,
-            [categoryNames.length > 0 ? categoryNames : null, categoryIds.length > 0 ? categoryIds : null]
-          )
-        ).rows;
-
-  const labRows: { id: string; name: string }[] =
-    labNames.length === 0 && labIds.length === 0
-      ? []
-      : (
-          await pool.query<{ id: string; name: string }>(
-            `SELECT id::text AS id, name
-             FROM labs
-             WHERE ($1::text[] IS NOT NULL AND name = ANY($1::text[]))
-                OR ($2::text[] IS NOT NULL AND id::text = ANY($2::text[]))`,
-            [labNames.length > 0 ? labNames : null, labIds.length > 0 ? labIds : null]
-          )
-        ).rows;
-
-  const categoryNameToId = new Map<string, string>();
-  const categoryIdToName = new Map<string, string>();
-  for (const row of categoryRows) {
-    categoryNameToId.set(row.name, row.id);
-    categoryIdToName.set(row.id, row.name);
+  if (existing.rows[0]) {
+    return existing.rows[0];
   }
 
-  const labNameToId = new Map<string, string>();
-  const labIdToName = new Map<string, string>();
-  for (const row of labRows) {
-    labNameToId.set(row.name, row.id);
-    labIdToName.set(row.id, row.name);
+  const inserted = await pool.query<{ id: string; name: string }>(
+    `INSERT INTO categories (name)
+     VALUES ($1)
+     RETURNING id::text AS id, name`,
+    [name]
+  );
+
+  return inserted.rows[0];
+}
+
+async function getOrCreateLab(name: string): Promise<{ id: string; name: string }> {
+  const existing = await pool.query<{ id: string; name: string }>(
+    `SELECT id::text AS id, name
+     FROM labs
+     WHERE name = $1
+     LIMIT 1`,
+    [name]
+  );
+
+  if (existing.rows[0]) {
+    return existing.rows[0];
   }
 
+  const inserted = await pool.query<{ id: string; name: string }>(
+    `INSERT INTO labs (name)
+     VALUES ($1)
+     ON CONFLICT (name) DO NOTHING
+     RETURNING id::text AS id, name`,
+    [name]
+  );
+
+  if (inserted.rows[0]) {
+    return inserted.rows[0];
+  }
+
+  const fallback = await pool.query<{ id: string; name: string }>(
+    `SELECT id::text AS id, name
+     FROM labs
+     WHERE name = $1
+     LIMIT 1`,
+    [name]
+  );
+
+  if (!fallback.rows[0]) {
+    throw new Error(`Unable to resolve lab: ${name}`);
+  }
+
+  return fallback.rows[0];
+}
+
+async function resolveRows(rows: AssetIngestRow[]): Promise<{ resolvedRows: ResolvedAssetIngestRow[]; errors: IngestionError[] }> {
   const resolvedRows: ResolvedAssetIngestRow[] = [];
+  const errors: IngestionError[] = [];
+  const categoryCache = new Map<string, { id: string; name: string }>();
+  const labCache = new Map<string, { id: string; name: string }>();
 
   for (const row of rows) {
-    const resolvedCategoryByName = row.categoryName ? categoryNameToId.get(row.categoryName) : undefined;
-    const resolvedCategoryByIdName = row.categoryId ? categoryIdToName.get(row.categoryId) : undefined;
-    const categoryId = row.categoryId ?? resolvedCategoryByName;
-    const categoryName = row.categoryName ?? resolvedCategoryByIdName;
+    try {
+      let category = categoryCache.get(row.categoryName);
+      if (!category) {
+        category = await getOrCreateCategory(row.categoryName);
+        categoryCache.set(row.categoryName, category);
+      }
 
-    if (!categoryId || !categoryName) {
-      errors.push({
-        row: row.rowNumber,
-        field: row.categoryId ? "category_id" : "category_name",
-        message: row.categoryId
-          ? `category_id does not exist: ${row.categoryId}`
-          : `category_name does not exist: ${row.categoryName}`,
-      });
-    }
+      let lab = labCache.get(row.labName);
+      if (!lab) {
+        lab = await getOrCreateLab(row.labName);
+        labCache.set(row.labName, lab);
+      }
 
-    if (
-      row.categoryId &&
-      row.categoryName &&
-      resolvedCategoryByIdName &&
-      row.categoryName !== resolvedCategoryByIdName
-    ) {
-      errors.push({
-        row: row.rowNumber,
-        field: "category_name",
-        message: `category_name does not match category_id. Expected ${resolvedCategoryByIdName}.`,
-      });
-    }
-
-    const resolvedLabByName = row.labName ? labNameToId.get(row.labName) : undefined;
-    const resolvedLabByIdName = row.labId ? labIdToName.get(row.labId) : undefined;
-    const labId = row.labId ?? resolvedLabByName;
-    const labName = row.labName ?? resolvedLabByIdName;
-
-    if (!labId || !labName) {
-      errors.push({
-        row: row.rowNumber,
-        field: row.labId ? "lab_id" : "lab_name",
-        message: row.labId ? `lab_id does not exist: ${row.labId}` : `lab_name does not exist: ${row.labName}`,
-      });
-    }
-
-    if (row.labId && row.labName && resolvedLabByIdName && row.labName !== resolvedLabByIdName) {
-      errors.push({
-        row: row.rowNumber,
-        field: "lab_name",
-        message: `lab_name does not match lab_id. Expected ${resolvedLabByIdName}.`,
-      });
-    }
-
-    if (categoryId && categoryName && labId && labName) {
       resolvedRows.push({
         ...row,
-        categoryName,
-        categoryId,
-        labName,
-        labId,
+        categoryId: category.id,
+        labId: lab.id,
+      });
+    } catch (error) {
+      errors.push({
+        row: row.rowNumber,
+        field: "category_name/lab_name",
+        message: (error as Error).message,
       });
     }
   }
@@ -456,18 +320,16 @@ async function ingestRows(rows: ResolvedAssetIngestRow[]): Promise<{ inserted: n
           `UPDATE assets
            SET name = $1,
                category_id = $2::uuid,
-               lab_id = $3::uuid,
-               checked_out_to = $4,
-               checked_out = $5
-           WHERE serial_number = $6`,
-          [row.name, row.categoryId, row.labId, row.checkedOutTo, row.checkedOut, row.serialNumber]
+               lab_id = $3::uuid
+           WHERE serial_number = $4`,
+          [row.name, row.categoryId, row.labId, row.serialNumber]
         );
         updated += 1;
       } else {
         await client.query(
-          `INSERT INTO assets (name, category_id, lab_id, serial_number, checked_out_to, checked_out)
-           VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6)`,
-          [row.name, row.categoryId, row.labId, row.serialNumber, row.checkedOutTo, row.checkedOut]
+          `INSERT INTO assets (name, category_id, lab_id, serial_number)
+           VALUES ($1, $2::uuid, $3::uuid, $4)`,
+          [row.name, row.categoryId, row.labId, row.serialNumber]
         );
         inserted += 1;
       }
@@ -515,12 +377,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const resolved = await resolveForeignKeys(rowValidation.rows);
+    const resolved = await resolveRows(rowValidation.rows);
     if (resolved.errors.length > 0) {
       return NextResponse.json(
         {
           ok: false,
-          message: "Foreign key validation failed. No rows were imported.",
+          message: "CSV lookup failed. No rows were imported.",
           totalRows: rowValidation.rows.length,
           errorCount: resolved.errors.length,
           errors: resolved.errors,

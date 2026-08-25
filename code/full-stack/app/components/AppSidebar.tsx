@@ -12,6 +12,7 @@ const NAV_ITEMS = [
 ];
 
 const ADMIN_NAV_ITEMS = [
+  { href: "/upload", label: "Upload" },
   { href: "/admin", label: "Admin" },
 ];
 

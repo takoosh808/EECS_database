@@ -151,3 +151,29 @@ docker compose exec db psql -U eecsuser -d eecsdb -c "SELECT name, serial_number
 
 ssh first.last@cpts-invtoolapp.eecs.wsu.edu
 cd /opt/invapp
+
+## Tests
+
+### Unit tests
+
+Unit tests (`tests/*.test.ts`) mock the database and SSE broadcaster, so no running stack is required. Run them through the `test` compose service:
+
+```powershell
+docker compose --profile test run --rm test
+```
+
+### System tests
+
+System tests (`tests/system/*.system.test.ts`) exercise the full asset request lifecycle (login, create lab/category/asset, create/approve/deny/return a request) over real HTTP against an isolated Postgres + app stack (`db-system-test`, `web-system-test`), separate from the `db`/`web` services used for local development.
+
+Run them:
+
+```powershell
+docker compose --profile system-test up --build --abort-on-container-exit --exit-code-from system-test system-test
+```
+
+Clean up the system-test containers afterward (do not use `docker compose down -v`, which also removes the dev `db`/`web`/`nginx` containers and the `pgdata` volume):
+
+```powershell
+docker compose rm -f -s db-system-test web-system-test system-test
+```
