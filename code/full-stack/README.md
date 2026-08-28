@@ -1,3 +1,22 @@
+## Registration
+
+Self-registration is disabled (`POST /api/users/register` returns `410`), so new users must be inserted directly into the database with a password hash in the same `scrypt$<salt>$<hash>` format the login route expects.
+
+1. Generate a compatible password hash (run against the `web` container so it uses the same Node/crypto version):
+
+```powershell
+docker compose exec web node -e "const {scryptSync,randomBytes}=require('crypto');const salt=randomBytes(16).toString('hex');const hash=scryptSync('<password>',Buffer.from(salt,'hex'),64).toString('hex');console.log('scrypt$'+salt+'$'+hash);"
+```
+
+2. Insert the user, using the `scrypt$...` value printed above as `password_hash`:
+
+```powershell
+docker compose exec db psql -U eecsuser -d eecsdb -c "INSERT INTO users (name, email, role, password_hash) VALUES ('<name>', '<email>', 'user', '<scrypt-hash-from-step-1>') ON CONFLICT (email) DO NOTHING RETURNING id, name, email, role;"
+```
+
+- Use `role = 'admin'` to create an admin account, or `role = 'owner'` to create an owner account with user-management permissions.
+- The user can now sign in at `/login` with the email and the plaintext password used in step 1.
+
 **Containerization (Docker) — Step-by-step**
 
 1. Prerequisites: install Docker Desktop and make sure `docker`/`docker compose` are available.
