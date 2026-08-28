@@ -128,7 +128,7 @@ export default function UserHomePage() {
           : [];
         const labsRaw = (await labsResponse.json()) as unknown;
         const labList = Array.isArray(labsRaw) ? (labsRaw as LabOption[]) : [];
-
+        console.log("Labs response:", labsRaw);
         const activeByAssetId = new Map(
           activeRows.map((row) => [row.asset_id, row]),
         );

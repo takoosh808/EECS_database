@@ -67,13 +67,13 @@ export async function POST(request: Request) {
     const nameColumn = await resolveNameColumn();
 
     const result = await pool.query<{
-      id: string;
+      user_id: string;
       user_name: string;
       email: string;
       role: "user" | "admin";
       password_hash: string;
     }>(
-      `SELECT id::text AS id, ${nameColumn} AS user_name, email, role, password_hash
+      `SELECT user_id::text AS id, ${nameColumn} AS user_name, email, role, password_hash
        FROM users
        WHERE lower(email) = $1
        LIMIT 1`,
@@ -96,14 +96,14 @@ export async function POST(request: Request) {
       ok: true,
       message: "Login successful.",
       user: {
-        id: user.id,
+        user_id: user.user_id,
         name: user.user_name,
         email: user.email,
         role: user.role,
       },
     });
 
-    response.cookies.set("auth_user", user.id, {
+    response.cookies.set("auth_user", user.user_id, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

@@ -20,7 +20,7 @@ export default function EditAssetsView({ data }: Props) {
       const res = await fetch("/api/assets/edit/remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: asset.id }),
+        body: JSON.stringify({ id: asset.asset_id }),
       });
       if (!res.ok) throw new Error("Failed to remove asset");
     } catch (err) {
@@ -45,7 +45,7 @@ export default function EditAssetsView({ data }: Props) {
 
           return (
             <div
-              key={asset.id}
+              key={asset.asset_id}
               className="border rounded-lg shadow p-4 flex flex-col items-center"
             >
               <img
@@ -80,7 +80,7 @@ export default function EditAssetsView({ data }: Props) {
 
       {showEditPanel && selectedAsset && (
         <EditAssetPanel
-          key={selectedAsset.id}
+          key={selectedAsset.asset_id}
           onClose={() => {
             setShowEditPanel(false);
             setSelectedAsset(null);

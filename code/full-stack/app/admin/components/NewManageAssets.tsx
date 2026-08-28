@@ -2,28 +2,25 @@
 import { Asset } from "@/app/types";
 import { useMemo, useState } from "react";
 import { useEffect } from "react";
-import CreateAssetPanel from "./CreateAssetsPanel";
 import EditAssetPanel from "./EditAssetsPanel";
 import { Category } from "@/app/types";
+import { AssetCategory } from "@/app/types";
 import { Lab } from "@/app/types";
+import CreateAssetBox from "./CreateAsset";
 
 export default function ManageAssetsView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [assetCategories, setAssetCategories] = useState<
+    Record<string, Category[]>
+  >({});
   const [selectedAsset, setSelectedAsset] = useState<Asset>();
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [labs, setLabs] = useState<Lab[]>([]);
-  const [requesterName, setRequesterName] = useState("");
-  const [requestLab, setRequestLab] = useState("");
-  const [requestReason, setRequestReason] = useState("");
-  const [requestError, setRequestError] = useState<string | null>(null);
-  const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<
-    Record<string, string>
-  >({});
   const [showCreatePanel, setShowCreatePanel] = useState(false);
+
   const fetchData = async () => {
     try {
       const res = await fetch("/api/assets/get");
@@ -38,34 +35,57 @@ export default function ManageAssetsView() {
       console.error("Failed to fetch assets:", err);
     }
   };
-  const fetchCategories = async () => {
+
+  const fetchAssetsCategories = async () => {
     try {
-      const res = await fetch("/api/categories/get");
+      const res = await fetch("/api/assets/get");
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
+
+      const json: Asset[] = await res.json();
+
+      const categoryMap: Record<string, Category[]> = {};
+
+      await Promise.all(
+        json.map(async (asset) => {
+          const categories = await fetchCategories(asset.asset_id);
+
+          categoryMap[asset.asset_id] = categories;
+        }),
+      );
+
+      setAssetCategories(categoryMap);
+    } catch (err) {
+      console.error("Failed to fetch asset categories:", err);
+    }
+  };
+  const fetchCategories = async (asset_id: string): Promise<Category[]> => {
+    try {
+      const res = await fetch(
+        `/api/assets/asset_categories/get?asset_id=${asset_id}`,
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const json = await res.json();
-      setCategories(json);
+
+      console.log("ASSET ID:", asset_id);
+      console.log("CATEGORIES RETURNED:", json);
+
+      return json;
     } catch (err) {
       console.error("Failed to fetch categories:", err);
+      return [];
     }
   };
-  const fetchLabs = async () => {
-    try {
-      const res = await fetch("/api/labs/get");
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const json = await res.json();
-      setLabs(json);
-    } catch (err) {
-      console.error("Failed to fetch labs:", err);
-    }
-  };
+
   useEffect(() => {
+    fetchAssetsCategories();
     fetchData();
-    fetchCategories();
-    fetchLabs();
   }, []);
 
   async function remove(asset: Asset) {
@@ -73,13 +93,13 @@ export default function ManageAssetsView() {
       const res = await fetch("/api/assets/edit/remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: asset.id }),
+        body: JSON.stringify({ asset_id: asset.asset_id }),
       });
       if (!res.ok) throw new Error("Failed to remove asset");
     } catch (err) {
       console.error(err);
     }
-    setAssets((prev) => prev.filter((a) => a.id !== asset.id));
+    setAssets((prev) => prev.filter((a) => a.asset_id !== asset.asset_id));
   }
   const handleEditAsset = (updatedAsset: Asset) => {
     fetch("/api/assets/edit/change", {
@@ -100,7 +120,7 @@ export default function ManageAssetsView() {
 
         setAssets((prevAssets) =>
           prevAssets.map((asset) =>
-            asset.id === finalAsset.id ? finalAsset : asset,
+            asset.asset_id === finalAsset.id ? finalAsset : asset,
           ),
         );
       })
@@ -108,40 +128,15 @@ export default function ManageAssetsView() {
         console.error("Error updating asset:", err);
       });
   };
-  // const filteredAssets = useMemo(() => {
-  //   const normalized = searchQuery.trim().toLowerCase();
-
-  //     return SAMPLE_ASSETS.filter((asset) => {
-  //       if (onlyRentedOut && !asset.rentedOut) {
-  //         return false;
-  //       }
-
-  //       if (!normalized) {
-  //         return true;
-  //       }
-
-  //       const haystack = [asset.name, asset.location, asset.rentedTo ?? ""]
-  //         .join(" ")
-  //         .toLowerCase();
-  //       return haystack.includes(normalized);
-  //     });
-  //   }, [searchQuery, onlyRentedOut]);
 
   const handleCreateAsset = async (newAsset: Asset) => {
-    console.log("Sending asset to backend:", newAsset);
+    setAssets((prev) => [...prev, newAsset]);
 
-    const res = await fetch("/api/assets/edit/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newAsset),
-    });
-
-    const data = await res.json();
-
-    setAssets((prev) => [...prev, data.asset ?? newAsset]);
-
-    await fetchCategories();
-    await fetchLabs();
+    const newAssetCategories = await fetchCategories(newAsset.asset_id);
+    setAssetCategories((prev) => ({
+      ...prev,
+      [newAsset.asset_id]: newAssetCategories,
+    }));
   };
 
   return (
@@ -163,7 +158,7 @@ export default function ManageAssetsView() {
       </div>
 
       {showCreatePanel && (
-        <CreateAssetPanel
+        <CreateAssetBox
           assets={assets}
           onClose={() => setShowCreatePanel(false)}
           onCreate={handleCreateAsset}
@@ -209,11 +204,10 @@ export default function ManageAssetsView() {
             <tr>
               <th className="px-4 py-3 font-semibold">Asset Name</th>
               <th className="px-4 py-3 font-semibold">Location</th>
-              <th className="px-4 py-3 font-semibold">Lab</th>
               <th className="px-4 py-3 font-semibold">Category</th>
               <th className="px-4 py-3 font-semibold">Serial Number</th>
               <th className="px-4 py-3 font-semibold">Remove Asset</th>
-              <th className="px-4 py-3 font-semibold">Edit Asset</th>
+              <th className="px-4 py-3 font-semibold">Edit Asset/View Asset</th>
             </tr>
           </thead>
 
@@ -227,16 +221,19 @@ export default function ManageAssetsView() {
             )}
 
             {assets.map((asset) => {
-              const category = categories.find(
-                (c) => c.id === asset.category_id,
+              console.log(
+                "ASSET IDS:",
+                assets.map((asset) => asset.asset_id),
               );
-              const lab = labs.find((l) => l.id === asset.lab_id);
               return (
-                <tr key={asset.id} className="border-t border-gray-200">
+                <tr key={asset.asset_id} className="border-t border-gray-200">
                   <td className="px-4 py-3">{asset.name}</td>
                   <td className="px-4 py-3">{asset.location}</td>
-                  <td className="px-4 py-3">{lab?.name ?? "not found"}</td>
-                  <td className="px-4 py-3">{category?.name ?? ""}</td>
+                  <td className="px-4 py-3">
+                    {assetCategories[asset.asset_id]?.map((cat) => (
+                      <div key={cat.category_id}>{cat.name}</div>
+                    ))}
+                  </td>
                   <td className="px-4 py-3">{asset.serial_number ?? "-"}</td>
                   <td className="px-4 py-3">
                     <button

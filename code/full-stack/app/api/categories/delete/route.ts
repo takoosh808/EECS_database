@@ -6,24 +6,21 @@ export async function POST(req: NextRequest) {
     const { name } = await req.json();
 
     if (!name) {
-      return NextResponse.json(
-        { error: "Missing name" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing name" }, { status: 400 });
     }
 
-    const result = await pool.query(
+    await pool.query(
       `
-      INSERT INTO labs (name)
-      VALUES ($1)
-      RETURNING id, name
+      DELETE FROM categories
+      WHERE name = $1
       `,
-      [name]
+      [name],
     );
 
-    return NextResponse.json(result.rows[0], { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error("Error adding new lab", err);
+    console.error("Error deleting category", err);
+
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

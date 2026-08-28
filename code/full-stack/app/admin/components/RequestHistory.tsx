@@ -28,13 +28,15 @@ export default function AssetHistoryView({ data }: Props) {
           <div className="space-y-4">
             {data.map((inactive) => (
               <div
-                key={inactive.id}
+                key={inactive.checkout_id}
                 className="grid grid-cols-4 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{inactive.user_id}</div>
-                <div>{inactive.asset_id}</div>
+                <div>{inactive.user}</div>
+                <div>{inactive.asset}</div>
                 <div>
-                  {new Date(inactive.request_date).toLocaleDateString()}
+                  {new Date(
+                    inactive.request_date.replace(" ", "T"),
+                  ).toLocaleDateString()}
                 </div>
                 <div>{inactive.checkout_status}</div>
               </div>

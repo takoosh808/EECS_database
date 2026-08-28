@@ -10,19 +10,17 @@ import CategoryCombobox from "./CategoryComboBox";
 
 type ManageType = "category" | "lab" | null;
 
-interface EditAssetPanelProps {
+interface CreateAssetPanelProps {
   onClose: () => void; // called when user closes panel
-  onEdit: (asset: Asset) => void; // called when user submits the edited asset
+  onCreate: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
-  assetToEdit: Asset; // the asset being edited — panel is prefilled from this
 }
 
-export default function EditAssetPanel({
+export default function CreateAssetBox({
   onClose,
-  onEdit,
+  onCreate,
   assets,
-  assetToEdit,
-}: EditAssetPanelProps) {
+}: CreateAssetPanelProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
     const loadCategories = async () => {
@@ -39,7 +37,7 @@ export default function EditAssetPanel({
     "Research Lab",
   ]);
 
-  // Multiple categories can be applied to an asset, like tags.
+  // Multiple categories can now be applied to an asset, like tags.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categoryToAdd, setCategoryToAdd] = useState("");
   const [description, setDescription] = useState("");
@@ -53,40 +51,6 @@ export default function EditAssetPanel({
   const [error, setError] = useState<string | null>(null);
 
   const [manageOpen, setManageOpen] = useState<ManageType>(null);
-
-  // Prefill the form from the asset being edited. Runs again if a different
-  // asset is passed in (e.g. the panel is reused for another row without
-  // unmounting).
-  useEffect(() => {
-    setName(assetToEdit.name ?? "");
-    setDescription(assetToEdit.description ?? "");
-    setImageUrl(assetToEdit.image_url ?? "");
-    setLocation(assetToEdit.location ?? "");
-    setSerialNumber(assetToEdit.serial_number ?? "");
-  }, [assetToEdit]);
-
-  // Prefill the selected category tags with this asset's existing
-  // categories, using the same GET endpoint ManageAssetsView already uses
-  // to populate its table.
-  useEffect(() => {
-    const loadAssetCategories = async () => {
-      try {
-        const res = await fetch(
-          `/api/assets/asset_categories/get?asset_id=${assetToEdit.asset_id}`,
-        );
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const existingCategories: Category[] = await res.json();
-        setSelectedCategories(
-          existingCategories.map((category) => category.category_id),
-        );
-      } catch (err) {
-        console.error("Failed to load asset's existing categories:", err);
-      }
-    };
-    loadAssetCategories();
-  }, [assetToEdit.asset_id]);
 
   const addCategoryTag = (category_id: string) => {
     if (!category_id) return;
@@ -111,44 +75,33 @@ export default function EditAssetPanel({
 
     setSubmitting(true);
     try {
-      // ── INFERRED API — needs a backend endpoint ───────────────────────
-      // There's currently no route that syncs an asset's category
-      // associations on edit. /api/assets/edit/change (used by the parent's
-      // onEdit) only appears to touch the `assets` table. This POSTs the
-      // full desired set of category_ids for this asset; the endpoint
-      // should REPLACE the asset's rows in `asset_categories` with this set
-      // (e.g. DELETE existing rows for asset_id, then INSERT the new ones —
-      // mirroring the INSERT pattern already used in
-      // /api/assets/edit/add). Rename the path/shape here to match
-      // whatever you actually implement.
-      const catRes = await fetch("/api/assets/asset_categories/set", {
+      const newAssetId = crypto.randomUUID();
+
+      const res = await fetch("/api/assets/edit/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          asset_id: assetToEdit.asset_id,
+          asset_id: newAssetId,
+          name,
+          description,
+          image_url,
+          location,
+          serial_number,
           category_ids: selectedCategories,
         }),
       });
 
-      if (!catRes.ok) {
-        const body = await catRes.json().catch(() => ({}));
-        throw new Error(body.error ?? "Failed to update asset categories");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to create asset");
       }
-      // ────────────────────────────────────────────────────────────────
 
-      // Base asset fields. The parent's onEdit (handleEditAsset) already
-      // owns the actual POST to /api/assets/edit/change, so this panel just
-      // hands back the updated object rather than fetching a second time.
-      const updatedAsset: Asset = {
-        ...assetToEdit,
-        name,
-        description,
-        image_url,
-        location,
-        serial_number,
-      };
+      const data = await res.json();
+      // Backend now returns the actual inserted row via RETURNING * — use
+      // that as the source of truth instead of rebuilding it client-side.
+      const createdAsset: Asset = data.asset;
 
-      onEdit(updatedAsset);
+      onCreate(createdAsset);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -172,7 +125,7 @@ export default function EditAssetPanel({
     });
     const createdCategory: Category = await res.json();
     setCategories((prev) => [...prev, createdCategory]);
-    // Automatically tag this asset with the category just created.
+    // Automatically tag the new asset with the category just created.
     addCategoryTag(createdCategory.category_id);
     setNewCategory("");
   };
@@ -207,7 +160,7 @@ export default function EditAssetPanel({
         {/* Header */}
 
         <div className="mb-8 flex items-center justify-between border-b border-black pb-4">
-          <h2 className="text-2xl font-semibold">Edit Asset</h2>
+          <h2 className="text-2xl font-semibold">Create New Asset</h2>
 
           <button
             type="button"
@@ -409,7 +362,7 @@ export default function EditAssetPanel({
               type="submit"
               className="rounded-md bg-black px-6 py-3 text-white hover:bg-gray-800"
             >
-              Save Changes
+              Create Asset
             </button>
           </div>
         </form>

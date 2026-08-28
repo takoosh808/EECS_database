@@ -31,7 +31,7 @@ export default function CategoryCombobox({ value, onChange }: Props) {
 
   const selectCategory = (category: Category) => {
     setQuery(category.name);
-    onChange(category.id);
+    onChange(category.category_id);
     setOpen(false);
   };
 
@@ -45,7 +45,7 @@ export default function CategoryCombobox({ value, onChange }: Props) {
 
     setCategories((prev) => [...prev, newCategory]);
     setQuery(newCategory.name);
-    onChange(newCategory.id);
+    onChange(newCategory.category_id);
     setOpen(false);
   };
 
@@ -57,7 +57,9 @@ export default function CategoryCombobox({ value, onChange }: Props) {
 
     if (!Array.isArray(categories)) return;
 
-    const selected = categories.find((c) => String(c.id) === String(value));
+    const selected = categories.find(
+      (c) => String(c.category_id) === String(value),
+    );
 
     setQuery(selected ? selected.name : "");
   }, [value, categories]);
@@ -82,7 +84,7 @@ export default function CategoryCombobox({ value, onChange }: Props) {
         <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-md z-10">
           {filtered.map((category) => (
             <div
-              key={category.id}
+              key={category.category_id}
               onClick={() => selectCategory(category)}
               className="p-2 cursor-pointer hover:bg-gray-100"
             >

@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const result = await pool.query(
       `
-        SELECT id, name, category_id, lab_id, serial_number, description, image_url, location, created_at, updated_at
+        SELECT asset_id, name, serial_number, description, image_url, location, created_at, updated_at
         FROM assets
         `,
     );

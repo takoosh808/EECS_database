@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS users(
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   role TEXT NOT NULL DEFAULT 'user',
@@ -12,21 +12,21 @@ CREATE TABLE IF NOT EXISTS users(
 );
 
 CREATE TABLE IF NOT EXISTS labs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS categories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
+  category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS assets (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+  category_id UUID NOT NULL REFERENCES categories(category_id) ON DELETE RESTRICT,
   lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE RESTRICT,
   --category_id TEXT NOT NULL,
   --lab_id TEXT NOT NULL,
@@ -35,13 +35,15 @@ CREATE TABLE IF NOT EXISTS assets (
   location TEXT,
   serial_number TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (asset_id, category_id)
 );
 
 CREATE TABLE IF NOT EXISTS asset_checkout(
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  asset_id UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
-  user_id INTEGER NOT NULL,
+  checkout_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
+  category_id UUID NOT NULL REFERENCES assets(category_id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   checkout_status VARCHAR(30) DEFAULT 'PENDING',
   request_date TIMESTAMPTZ DEFAULT NOW(),
   checkout_length INTEGER,
@@ -59,7 +61,7 @@ CREATE TYPE message_type_enum AS ENUM (
 
 --sender_id needs to reference admin id once the table exists for users
 CREATE TABLE IF NOT EXISTS asset_checkout_messages(
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  checkout_message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   checkout_id UUID NOT NULL REFERENCES asset_checkout(id) ON DELETE CASCADE,
   sender_id UUID DEFAULT NULL,
   message_type message_type_enum NOT NULL,

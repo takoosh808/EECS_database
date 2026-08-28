@@ -22,12 +22,16 @@ export default function RequestsView({ data }: Props) {
     }
   }
   async function denyRequest(requestId: string) {
+    console.log("REQUEST ID:", requestId);
     try {
       const res = await fetch("/api/requests/deny", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: requestId }),
       });
+      const data = await res.json();
+      console.log("Status:", res.status);
+      console.log("Response:", data);
       if (!res.ok) throw new Error("Failed to deny request");
     } catch (err) {
       console.error(err);
@@ -55,23 +59,23 @@ export default function RequestsView({ data }: Props) {
           <div className="space-y-2">
             {data.map((req) => (
               <div
-                key={req.id}
+                key={req.checkout_id}
                 className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{req.user_id}</div>
-                <div>{req.asset_id}</div>
+                <div>{req.user}</div>
+                <div>{req.asset}</div>
                 <div>{new Date(req.request_date).toLocaleDateString()}</div>
                 <div>{req.checkout_status}</div>
                 <div>
                   <button
                     className="bg-green-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
-                    onClick={() => approveRequests(req.id)}
+                    onClick={() => approveRequests(req.checkout_id)}
                   >
                     Approve
                   </button>
                   <button
                     className="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
-                    onClick={() => denyRequest(req.id)}
+                    onClick={() => denyRequest(req.checkout_id)}
                   >
                     Deny
                   </button>

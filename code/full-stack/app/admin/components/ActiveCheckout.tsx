@@ -44,17 +44,17 @@ export default function ActiveAssetsView({ data }: Props) {
           <div className="space-y-2">
             {data.map((active) => (
               <div
-                key={active.id}
+                key={active.checkout_id}
                 className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{active.user_id}</div>
-                <div>{active.asset_id}</div>
+                <div>{active.user}</div>
+                <div>{active.asset}</div>
                 <div>{new Date(active.request_date).toLocaleDateString()}</div>
                 <div>{active.checkout_status}</div>
                 <div>
                   <button
                     className="border border-gray-400 text-black px-2 py-1 rounded mr-2 cursor-pointer"
-                    onClick={() => ApproveReturn(active.id)}
+                    onClick={() => ApproveReturn(active.checkout_id)}
                   >
                     Mark Returned
                   </button>
