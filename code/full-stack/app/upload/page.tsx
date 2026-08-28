@@ -31,7 +31,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
-    if (role !== "admin") {
+    if (role !== "admin" && role !== "owner") {
       router.push("/home");
       return;
     }
@@ -112,7 +112,7 @@ export default function UploadPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex w-fit items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-fit items-center justify-center rounded-md bg-crimson-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Uploading..." : "Upload CSV"}
             </button>
@@ -137,7 +137,7 @@ export default function UploadPage() {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 text-sm shadow-sm">
             <h2 className="mb-3 text-base font-semibold text-gray-900">Template</h2>
             <p className="text-gray-700">Start from the included CSV template.</p>
-            <a className="mt-3 inline-flex text-sm font-medium text-blue-700 underline" href="/sample/example.csv" download>
+            <a className="mt-3 inline-flex text-sm font-medium text-crimson-700 underline" href="/sample/example.csv" download>
               Download CSV template
             </a>
           </div>

@@ -22,7 +22,7 @@ export default function AdminDashboard()
 
     useEffect(() => {
         const userRole = localStorage.getItem("userRole");
-        if (userRole !== "admin") {
+        if (userRole !== "admin" && userRole !== "owner") {
             router.push("/home");
             return;
         }
@@ -179,24 +179,24 @@ export default function AdminDashboard()
             <div className="mx-auto px-8 py-4">
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+                        <h1 className="text-2xl font-bold"><span className="text-crimson-600">Admin</span> Dashboard</h1>
                         <a>Manage assets and handle asset requests</a>
                     </div>
                     <button
                         type="button"
                         onClick={() => router.push("/home")}
-                        className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                        className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
                     >
                         Back to Home
                     </button>
                 </div>
             </div>
-            <RequestsView data={requests}/>
-            <ActiveAssetsView data={active} />
+            <RequestsView data={requests} onActionComplete={() => { fetchRequests(); fetchActive(); fetchInactive(); }} />
+            <ActiveAssetsView data={active} onActionComplete={() => { fetchActive(); fetchInactive(); }} />
             <AssetHistoryView data={inactive}/>
             <EditAssetsView data={assets} />
             
-            <button className="cursor-pointer" onClick={() => setShowCreatePanel(true)}>Create New Asset</button>
+            <button className="m-6 rounded-md bg-crimson-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-700 cursor-pointer" onClick={() => setShowCreatePanel(true)}>Create New Asset</button>
             {showCreatePanel && (
                 <CreateAssetsPanel
                     onClose={() => setShowCreatePanel(false)}

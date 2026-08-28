@@ -386,19 +386,14 @@ export default function UserHomePage() {
                 <label htmlFor="request-lab" className="mb-1 block text-sm font-medium text-gray-800">
                   Lab
                 </label>
-                <select
+                <input
                   id="request-lab"
+                  type="text"
                   value={requestLab}
                   onChange={(event) => setRequestLab(event.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-                >
-                  <option value="">Select a lab</option>
-                  {labs.map((lab) => (
-                    <option key={lab.id} value={lab.name}>
-                      {lab.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Enter your lab"
+                />
               </div>
 
               <div>

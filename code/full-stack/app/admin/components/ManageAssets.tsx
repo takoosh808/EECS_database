@@ -46,7 +46,7 @@ export default function EditAssetsView({ data }: Props) {
           return (
             <div
               key={asset.id}
-              className="border rounded-lg shadow p-4 flex flex-col items-center"
+              className="border border-zinc-200 rounded-lg shadow-sm p-4 flex flex-col items-center transition-shadow hover:shadow-md"
             >
               <img
                 src={defaultImage}
@@ -56,19 +56,19 @@ export default function EditAssetsView({ data }: Props) {
 
               <h3 className="font-bold text-lg mb-1">{asset.name}</h3>
 
-              <p className="text-gray-600 text-sm">NO DESCRIPTION YET</p>
+              <p className="text-zinc-500 text-sm">NO DESCRIPTION YET</p>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => openEdit(asset)}
-                  className="px-2 py-1 bg-blue-500 text-white text-sm rounded cursor-pointer"
+                  className="px-2 py-1 bg-crimson-600 text-white text-sm rounded transition-colors hover:bg-crimson-700 cursor-pointer"
                 >
                   Edit
                 </button>
 
                 <button
                   onClick={() => remove(asset)}
-                  className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 cursor-pointer"
+                  className="px-2 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 cursor-pointer"
                 >
                   Remove
                 </button>

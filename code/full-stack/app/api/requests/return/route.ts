@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import  pool  from "../../../../db/init/db_index";
 import { broadcastEvent } from "../../sse/route";
 
-async function getUserRole(userId: string | undefined): Promise<"user" | "admin" | null> {
+async function getUserRole(userId: string | undefined): Promise<"user" | "admin" | "owner" | null> {
     if (!userId) return null;
     try {
-        const result = await pool.query<{ role: "user" | "admin" }>("SELECT role FROM users WHERE id::text = $1", [userId]);
+        const result = await pool.query<{ role: "user" | "admin" | "owner" }>("SELECT role FROM users WHERE id::text = $1", [userId]);
         return result.rows[0]?.role ?? null;
     } catch (err) {
         console.error("Error fetching user role:", err);
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest)
         const userId = cookies.get("auth_user")?.value;
         const userRole = await getUserRole(userId);
 
-        if (userRole !== "admin") {
+        if (userRole !== "admin" && userRole !== "owner") {
             return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
         }
 

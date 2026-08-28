@@ -14,16 +14,17 @@ const NAV_ITEMS = [
 const ADMIN_NAV_ITEMS = [
   { href: "/upload", label: "Upload" },
   { href: "/admin", label: "Admin" },
+  { href: "/admin/users", label: "Users" },
 ];
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [userRole, setUserRole] = useState<"user" | "admin" | null>(null);
+  const [userRole, setUserRole] = useState<"user" | "admin" | "owner" | null>(null);
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole") as "user" | "admin" | null;
+    const role = localStorage.getItem("userRole") as "user" | "admin" | "owner" | null;
     setUserRole(role);
   }, []);
 
@@ -44,8 +45,8 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside className="flex w-full flex-col border-b border-gray-200 bg-white p-4 lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Dashboard</h2>
+    <aside className="flex w-full flex-col border-b border-zinc-800 bg-zinc-900 p-4 lg:sticky lg:top-0 lg:h-screen lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r">
+      <h2 className="mb-4 text-lg font-semibold tracking-tight text-white"><span className="text-crimson-400">EECS</span> Inventory</h2>
       <nav className="flex gap-2 lg:flex-col">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
@@ -54,16 +55,16 @@ export default function AppSidebar() {
               key={item.href}
               href={item.href}
               className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                active ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
+                active ? "bg-crimson-600 text-white" : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
               }`}
             >
               {item.label}
             </Link>
           );
         })}
-        {userRole === "admin" && (
+        {(userRole === "admin" || userRole === "owner") && (
           <>
-            <hr className="my-2 border-gray-300" />
+            <hr className="my-2 border-zinc-700" />
             {ADMIN_NAV_ITEMS.map((item) => {
               const active = pathname === item.href;
               return (
@@ -71,7 +72,7 @@ export default function AppSidebar() {
                   key={item.href}
                   href={item.href}
                   className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? "bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"
+                    active ? "bg-crimson-700 text-white" : "text-crimson-300 hover:bg-zinc-800 hover:text-crimson-200"
                   }`}
                 >
                   {item.label}
@@ -85,7 +86,7 @@ export default function AppSidebar() {
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-4 rounded-md border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 lg:mt-auto"
+        className="mt-4 rounded-md border border-zinc-700 px-3 py-2 text-left text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 lg:mt-auto"
       >
         {loggingOut ? "Logging out..." : "Logout"}
       </button>
