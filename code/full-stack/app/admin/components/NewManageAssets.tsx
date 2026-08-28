@@ -101,33 +101,6 @@ export default function ManageAssetsView() {
     }
     setAssets((prev) => prev.filter((a) => a.asset_id !== asset.asset_id));
   }
-  const handleEditAsset = (updatedAsset: Asset) => {
-    fetch("/api/assets/edit/change", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedAsset),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to update asset");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("UPDATE RESPONSE:", data);
-        const finalAsset = data.asset;
-        // use backend response if it returns the updated asset
-
-        setAssets((prevAssets) =>
-          prevAssets.map((asset) =>
-            asset.asset_id === finalAsset.id ? finalAsset : asset,
-          ),
-        );
-      })
-      .catch((err) => {
-        console.error("Error updating asset:", err);
-      });
-  };
 
   const handleCreateAsset = async (newAsset: Asset) => {
     setAssets((prev) => [...prev, newAsset]);
@@ -138,6 +111,40 @@ export default function ManageAssetsView() {
       [newAsset.asset_id]: newAssetCategories,
     }));
   };
+
+  const handleEditAsset = async (updatedAsset: Asset) => {
+    setAssets((prev) =>
+      prev.map((asset) =>
+        asset.asset_id === updatedAsset.asset_id ? updatedAsset : asset,
+      ),
+    );
+
+    const updatedAssetCategories = await fetchCategories(updatedAsset.asset_id);
+
+    setAssetCategories((prev) => ({
+      ...prev,
+      [updatedAsset.asset_id]: updatedAssetCategories,
+    }));
+  };
+
+  const filteredAssets = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+
+    if (!query) return assets;
+
+    return assets.filter((asset) => {
+      const matchesAsset =
+        asset.name?.toLowerCase().includes(query) ||
+        asset.serial_number?.toLowerCase().includes(query) ||
+        asset.location?.toLowerCase().includes(query);
+
+      const matchesCategory = assetCategories[asset.asset_id]?.some(
+        (category) => category.name.toLowerCase().includes(query),
+      );
+
+      return matchesAsset || matchesCategory;
+    });
+  }, [assets, assetCategories, searchQuery]);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 py-2">
@@ -171,30 +178,10 @@ export default function ManageAssetsView() {
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search assets, location, lab, etc"
+            placeholder="Search asset names, serial numbers, categories, locations"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
           />
-
-          <button
-            type="button"
-            onClick={() => setShowFilters((previous) => !previous)}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-          >
-            Filters
-          </button>
         </div>
-
-        {showFilters && (
-          <div className="mt-3 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
-            <input
-              id="only-rented"
-              type="checkbox"
-              checked={onlyRentedOut}
-              onChange={(event) => setOnlyRentedOut(event.target.checked)}
-            />
-            <label htmlFor="only-rented">Show only rented-out assets</label>
-          </div>
-        )}
       </section>
 
       {/* Table */}
@@ -220,7 +207,7 @@ export default function ManageAssetsView() {
               </tr>
             )}
 
-            {assets.map((asset) => {
+            {filteredAssets.map((asset) => {
               console.log(
                 "ASSET IDS:",
                 assets.map((asset) => asset.asset_id),

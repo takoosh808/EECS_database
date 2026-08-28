@@ -1,59 +1,112 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../../../db/init/db_index";
-import { Asset } from "../../../../types";
-import { broadcastEvent } from "@/app/api/sse/route";
 
-// Function for updating an existing asset's base fields (name, serial
-// number, description, image_url, location). Category associations are
-// handled separately by /api/assets/asset_categories/set.
 export async function POST(req: NextRequest) {
-  try {
-    const asset = await req.json();
+  const client = await pool.connect();
 
-    if (!asset.asset_id) {
+  try {
+    const body = await req.json();
+
+    const {
+      asset_id,
+      name,
+      description,
+      image_url,
+      location,
+      serial_number,
+      category_ids,
+    } = body;
+
+    // -------------------------
+    // 1. Validate input
+    // -------------------------
+
+    if (!asset_id || typeof asset_id !== "string") {
+      return NextResponse.json({ error: "Invalid asset_id" }, { status: 400 });
+    }
+
+    if (!name || typeof name !== "string") {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    if (!serial_number || typeof serial_number !== "string") {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Serial number is required" },
         { status: 400 },
       );
     }
 
-    const result = await pool.query(
+    if (!Array.isArray(category_ids)) {
+      return NextResponse.json(
+        { error: "asset must have a category" },
+        { status: 400 },
+      );
+    }
+
+    // -------------------------
+    // 2. Start transaction
+    // -------------------------
+
+    await client.query("BEGIN");
+
+    // -------------------------
+    // 3. Insert asset
+    // -------------------------
+
+    const result = await client.query(
       `
-      UPDATE assets
-      SET
-        name = $2,
-        serial_number = $3,
-        description = $4,
-        image_url = $5,
-        location = $6
-      WHERE asset_id = $1
+      UPDATE assets SET name = $2, description = $3, image_url = $4, location = $5, serial_number = $6 WHERE asset_id = $1
       RETURNING *
       `,
       [
-        asset.asset_id,
-        asset.name,
-        asset.serial_number,
-        asset.description,
-        asset.image_url,
-        asset.location,
+        asset_id,
+        name,
+        description ?? null,
+        image_url ?? null,
+        location ?? null,
+        serial_number,
       ],
     );
 
-    if (result.rowCount === 0) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+    await client.query(
+      `
+      DELETE FROM asset_categories
+      WHERE asset_id = $1
+      `,
+      [asset_id],
+    );
+
+    for (const category_id of category_ids) {
+      await client.query(
+        `
+        INSERT INTO asset_categories (
+          asset_id,
+          category_id
+        )
+        VALUES ($1, $2)
+        `,
+        [asset_id, category_id],
+      );
     }
 
-    broadcastEvent({ type: "EDIT_ASSET", asset_id: asset.asset_id });
+    // -------------------------
+    // 5. Commit transaction
+    // -------------------------
+
+    await client.query("COMMIT");
+
+    return NextResponse.json(result.rows[0], { status: 201 });
+  } catch (error) {
+    // Undo everything if anything failed
+    await client.query("ROLLBACK");
+
+    console.error("Error creating asset:", error);
 
     return NextResponse.json(
-      {
-        success: true,
-        asset: result.rows[0],
-      },
-      { status: 200 },
+      { error: "Failed to create asset" },
+      { status: 500 },
     );
-  } catch (err) {
-    console.error("Error updating asset in database", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } finally {
+    client.release();
   }
 }

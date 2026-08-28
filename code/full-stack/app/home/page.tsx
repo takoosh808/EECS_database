@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { AssetRow } from "@/app/types";
+import { Asset } from "@/app/types";
 
 type ApiAsset = {
   id: string;
@@ -110,39 +111,32 @@ export default function UserHomePage() {
 
     async function loadDashboardAssets() {
       try {
-        const [assetsResponse, activeResponse, labsResponse] =
-          await Promise.all([
-            fetch("/api/assets/get"),
-            fetch("/api/requests/active"),
-            fetch("/api/labs/get"),
-          ]);
+        const [assetsResponse, activeResponse] = await Promise.all([
+          fetch("/api/assets/get"),
+          fetch("/api/requests/active"),
+        ]);
 
-        if (!assetsResponse.ok || !activeResponse.ok || !labsResponse.ok) {
+        if (!assetsResponse.ok || !activeResponse.ok) {
           return;
         }
 
-        const rows = (await assetsResponse.json()) as ApiAsset[];
+        const rows = (await assetsResponse.json()) as Asset[];
         const activeRowsRaw = (await activeResponse.json()) as unknown;
         const activeRows = Array.isArray(activeRowsRaw)
           ? (activeRowsRaw as ActiveCheckout[])
           : [];
-        const labsRaw = (await labsResponse.json()) as unknown;
-        const labList = Array.isArray(labsRaw) ? (labsRaw as LabOption[]) : [];
-        console.log("Labs response:", labsRaw);
+
         const activeByAssetId = new Map(
           activeRows.map((row) => [row.asset_id, row]),
         );
-        const labNameById = new Map(labList.map((lab) => [lab.id, lab.name]));
 
         const mapped: AssetRow[] = rows.map((row) => {
-          const active = activeByAssetId.get(row.id);
-          const requestedLab = parseLabFromRequestDetails(
-            active?.request_details,
-          );
+          const active = activeByAssetId.get(row.asset_id);
+
           return {
-            id: row.id,
+            id: row.asset_id,
             name: row.name,
-            location: requestedLab ?? labNameById.get(row.lab_id) ?? row.lab_id,
+            location: row.location,
             rentedOut: Boolean(active),
             rentedTo: active?.user_id ?? null,
             rentedOutAt: active?.request_date ?? null,
@@ -151,7 +145,6 @@ export default function UserHomePage() {
         });
         if (!cancelled && mapped.length > 0) {
           setAssets(mapped);
-          setLabs(labList);
         }
       } catch {
         // Keep sample assets if backend is unavailable.

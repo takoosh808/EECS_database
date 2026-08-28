@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Asset } from "../../types";
-import { Lab } from "../../types";
-import LabCombobox from "./LabComboBox";
 import { Category } from "../../types";
-import { AssetCategory } from "../../types";
-import CategoryCombobox from "./CategoryComboBox";
 
 type ManageType = "category" | "lab" | null;
 
@@ -20,7 +16,6 @@ interface EditAssetPanelProps {
 export default function EditAssetPanel({
   onClose,
   onEdit,
-  assets,
   assetToEdit,
 }: EditAssetPanelProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,12 +28,6 @@ export default function EditAssetPanel({
     loadCategories();
   }, []);
 
-  const [labs, setLabs] = useState<string[]>([
-    "EECS Lab",
-    "Hardware Lab",
-    "Research Lab",
-  ]);
-
   // Multiple categories can be applied to an asset, like tags.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categoryToAdd, setCategoryToAdd] = useState("");
@@ -48,7 +37,6 @@ export default function EditAssetPanel({
   const [location, setLocation] = useState("");
   const [serial_number, setSerialNumber] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newLab, setNewLab] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,45 +98,32 @@ export default function EditAssetPanel({
     }
 
     setSubmitting(true);
+
     try {
-      // ── INFERRED API — needs a backend endpoint ───────────────────────
-      // There's currently no route that syncs an asset's category
-      // associations on edit. /api/assets/edit/change (used by the parent's
-      // onEdit) only appears to touch the `assets` table. This POSTs the
-      // full desired set of category_ids for this asset; the endpoint
-      // should REPLACE the asset's rows in `asset_categories` with this set
-      // (e.g. DELETE existing rows for asset_id, then INSERT the new ones —
-      // mirroring the INSERT pattern already used in
-      // /api/assets/edit/add). Rename the path/shape here to match
-      // whatever you actually implement.
-      const catRes = await fetch("/api/assets/asset_categories/set", {
+      const res = await fetch("/api/assets/edit/change", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           asset_id: assetToEdit.asset_id,
+          name,
+          serial_number,
+          description,
+          image_url,
+          location,
           category_ids: selectedCategories,
         }),
       });
 
-      if (!catRes.ok) {
-        const body = await catRes.json().catch(() => ({}));
-        throw new Error(body.error ?? "Failed to update asset categories");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to update asset");
       }
-      // ────────────────────────────────────────────────────────────────
 
-      // Base asset fields. The parent's onEdit (handleEditAsset) already
-      // owns the actual POST to /api/assets/edit/change, so this panel just
-      // hands back the updated object rather than fetching a second time.
-      const updatedAsset: Asset = {
-        ...assetToEdit,
-        name,
-        description,
-        image_url,
-        location,
-        serial_number,
-      };
+      const data = await res.json();
 
-      onEdit(updatedAsset);
+      // Backend is the source of truth
+      onEdit(data);
+
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -157,7 +132,6 @@ export default function EditAssetPanel({
     }
   };
 
-  //fix here
   const createCategory = async () => {
     const value = newCategory.trim();
 

@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import { Asset } from "../../types";
 import { Lab } from "../../types";
-import LabCombobox from "./LabComboBox";
 import { Category } from "../../types";
 import { AssetCategory } from "../../types";
-import CategoryCombobox from "./CategoryComboBox";
 
 type ManageType = "category" | "lab" | null;
 
@@ -99,7 +97,7 @@ export default function CreateAssetBox({
       const data = await res.json();
       // Backend now returns the actual inserted row via RETURNING * — use
       // that as the source of truth instead of rebuilding it client-side.
-      const createdAsset: Asset = data.asset;
+      const createdAsset: Asset = data;
 
       onCreate(createdAsset);
       onClose();
