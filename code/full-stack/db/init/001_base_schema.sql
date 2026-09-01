@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS asset_categories (
 CREATE TABLE IF NOT EXISTS asset_checkout(
   checkout_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   asset_id UUID NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES user(user_id),
+  user_id UUID NOT NULL REFERENCES users(user_id),
   r4r TEXT,
   checkout_status VARCHAR(30) DEFAULT 'PENDING',
   request_date TIMESTAMPTZ DEFAULT NOW(),
@@ -56,15 +56,13 @@ CREATE TABLE IF NOT EXISTS asset_checkout(
 --sender_id needs to reference admin id once the table exists for users
 CREATE TABLE IF NOT EXISTS asset_checkout_messages(
   message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id UUID NOT NULL REFERENCES user(user_id),
-  receiver_id UUID NOT NULL REFERENCES user(user_id),
+  sender_id UUID NOT NULL REFERENCES users(user_id),
+  receiver_id UUID NOT NULL REFERENCES users(user_id),
   message_text TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
 
-CREATE INDEX IF NOT EXISTS idx_assets_category_id ON assets(category_id);
-CREATE INDEX IF NOT EXISTS idx_assets_lab_id ON assets(lab_id);
 CREATE INDEX IF NOT EXISTS idx_assets_checkout_status ON asset_checkout(checkout_status);
 
 CREATE OR REPLACE FUNCTION set_updated_at()
