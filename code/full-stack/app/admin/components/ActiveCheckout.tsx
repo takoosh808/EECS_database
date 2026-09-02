@@ -10,12 +10,12 @@ type Props = {
 
 //View for active checkouts
 export default function ActiveAssetsView({ data }: Props) {
-  async function ApproveReturn(requestId: string) {
+  async function ApproveReturn(checkout_id: string) {
     try {
       const res = await fetch("/api/requests/return", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: requestId }),
+        body: JSON.stringify({ checkout_id }),
       });
       if (!res.ok) throw new Error("Failed to approve return");
     } catch (err) {

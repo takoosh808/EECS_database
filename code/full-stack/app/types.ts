@@ -12,6 +12,10 @@ export type AssetCheckout = {
   request_date: string;
 };
 
+export type AssetCheckoutWithDetails = AssetCheckout & {
+  checkout_id: string;
+};
+
 export type asset_update = {
   checkout_status:
     | "PENDING"
@@ -33,8 +37,8 @@ export type Asset = {
 };
 
 export type AssetCategory = {
-  asset_id: Asset;
-  categories: string[];
+  asset: Asset;
+  categories: Category[];
 };
 
 export type Lab = {

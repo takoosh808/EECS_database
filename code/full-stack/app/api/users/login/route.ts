@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       role: "user" | "admin";
       password_hash: string;
     }>(
-      `SELECT user_id::text AS id, ${nameColumn} AS user_name, email, role, password_hash
+      `SELECT user_id::text AS user_id, ${nameColumn} AS user_name, email, role, password_hash
        FROM users
        WHERE lower(email) = $1
        LIMIT 1`,

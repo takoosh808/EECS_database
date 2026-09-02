@@ -6,9 +6,9 @@ import { broadcastEvent } from "../sse/route";
 export async function GET(req: NextRequest) {
   const result = await pool.query(
     `
-        SELECT checkout_id, asset_id, user_id, checkout_status, request_date, checkout_length, processed_by, returned_at
-        FROM asset_checkout
-        WHERE checkout_status = 'PENDING'
+        SELECT ac.checkout_id, a.name AS asset, u.name AS user, ac.checkout_status, ac.request_date
+FROM asset_checkout ac JOIN users u ON ac.user_id = u.user_id 
+JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
         `,
   );
   return NextResponse.json(result.rows);
@@ -17,8 +17,6 @@ export async function GET(req: NextRequest) {
 type CreateRequestBody = {
   assetId?: string;
   requesterName?: string;
-  lab?: string;
-  reason?: string;
 };
 
 function stringToStableInteger(value: string): number {
@@ -34,8 +32,6 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as CreateRequestBody;
     const assetId = body.assetId?.trim();
     const requesterName = body.requesterName?.trim() ?? "";
-    const requestLab = body.lab?.trim() ?? "";
-    const requestReason = body.reason?.trim() ?? "";
 
     if (!assetId) {
       return NextResponse.json(
@@ -72,7 +68,7 @@ export async function POST(req: NextRequest) {
         : numeric;
     }
 
-    const inserted = await pool.query<{ id: string }>(
+    const inserted = await pool.query<{ user_id: string }>(
       `
             INSERT INTO asset_checkout (asset_id, user_id, checkout_status)
             VALUES ($1, $2, 'PENDING')
@@ -80,27 +76,10 @@ export async function POST(req: NextRequest) {
       [assetId, userIdValue],
     );
 
-    const requestId = inserted.rows[0]?.id;
-    const requestDetails = [
-      requesterName ? `Name: ${requesterName}` : "",
-      requestLab ? `Lab: ${requestLab}` : "",
-      requestReason ? `Reason: ${requestReason}` : "",
-    ]
-      .filter(Boolean)
-      .join(" | ");
-
-    if (requestId && requestDetails) {
-      await pool.query(
-        `
-                INSERT INTO asset_checkout_messages (checkout_id, message_type, message_text)
-                VALUES ($1, 'REASON', $2)
-                `,
-        [requestId, requestDetails],
-      );
-    }
+    const requestId = inserted.rows[0]?.user_id;
 
     broadcastEvent({ type: "REQUEST_CREATED", requestId });
-    return NextResponse.json({ success: true, id: requestId });
+    return NextResponse.json({ success: true, request_id: requestId });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

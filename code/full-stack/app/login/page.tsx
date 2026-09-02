@@ -13,7 +13,7 @@ type LoginResponse = {
   message: string;
   error?: string;
   user?: {
-    id: string;
+    user_id: string;
     name: string;
     email: string;
     role: "user" | "admin";
@@ -92,7 +92,10 @@ export default function LoginPage() {
         <h1 className="text-2xl font-semibold">User Login</h1>
         <p className="text-sm">Sign in to access the inventory system.</p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 rounded-lg border p-4"
+        >
           <label htmlFor="email" className="text-sm font-medium">
             Email
           </label>
@@ -100,7 +103,12 @@ export default function LoginPage() {
             id="email"
             type="email"
             value={form.email}
-            onChange={(event) => setForm((previous) => ({ ...previous, email: event.target.value }))}
+            onChange={(event) =>
+              setForm((previous) => ({
+                ...previous,
+                email: event.target.value,
+              }))
+            }
             className="rounded-md border px-3 py-2"
             placeholder="name@wsu.edu"
           />
@@ -112,7 +120,12 @@ export default function LoginPage() {
             id="password"
             type="password"
             value={form.password}
-            onChange={(event) => setForm((previous) => ({ ...previous, password: event.target.value }))}
+            onChange={(event) =>
+              setForm((previous) => ({
+                ...previous,
+                password: event.target.value,
+              }))
+            }
             className="rounded-md border px-3 py-2"
             placeholder="Enter your password"
           />
@@ -128,7 +141,6 @@ export default function LoginPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           {message && <p className="text-sm text-green-600">{message}</p>}
         </form>
-
       </main>
     </div>
   );

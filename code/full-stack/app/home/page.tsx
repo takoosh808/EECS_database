@@ -277,8 +277,6 @@ export default function UserHomePage() {
                         setRequestAsset(asset);
                         setRequestError(null);
                         setRequesterName("");
-                        setRequestLab("");
-                        setRequestReason("");
                       }}
                       disabled={asset.rentedOut}
                       className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -352,12 +350,8 @@ export default function UserHomePage() {
                 event.preventDefault();
                 setRequestError(null);
 
-                if (
-                  !requesterName.trim() ||
-                  !requestLab.trim() ||
-                  !requestReason.trim()
-                ) {
-                  setRequestError("Please fill out name, lab, and reason.");
+                if (!requesterName.trim()) {
+                  setRequestError("Please fill out name");
                   return;
                 }
 
@@ -371,8 +365,6 @@ export default function UserHomePage() {
                     body: JSON.stringify({
                       assetId: requestAsset.id,
                       requesterName,
-                      lab: requestLab,
-                      reason: requestReason,
                     }),
                   });
 
@@ -410,44 +402,6 @@ export default function UserHomePage() {
                   onChange={(event) => setRequesterName(event.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
                   placeholder="Your name"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="request-lab"
-                  className="mb-1 block text-sm font-medium text-gray-800"
-                >
-                  Lab
-                </label>
-                <select
-                  id="request-lab"
-                  value={requestLab}
-                  onChange={(event) => setRequestLab(event.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-                >
-                  <option value="">Select a lab</option>
-                  {labs.map((lab) => (
-                    <option key={lab.id} value={lab.name}>
-                      {lab.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="request-reason"
-                  className="mb-1 block text-sm font-medium text-gray-800"
-                >
-                  Reason For Request
-                </label>
-                <textarea
-                  id="request-reason"
-                  value={requestReason}
-                  onChange={(event) => setRequestReason(event.target.value)}
-                  className="min-h-24 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-                  placeholder="Brief reason for requesting this asset"
                 />
               </div>
 
