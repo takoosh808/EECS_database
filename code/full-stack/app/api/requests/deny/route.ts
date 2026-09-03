@@ -18,12 +18,18 @@ async function getUserRole(
   }
 }
 
+type DenyRequestBody = {
+  requestId: string;
+  finalMessage: string;
+  user_id: string;
+};
+
 //POST API route for approving requests, very similar to approve but we use DENIED flag
 export async function POST(req: NextRequest) {
   try {
     const cookies = req.cookies;
-    const userId = cookies.get("auth_user")?.value;
-    const userRole = await getUserRole(userId);
+    const adminId = cookies.get("auth_user")?.value;
+    const userRole = await getUserRole(adminId);
 
     if (userRole !== "admin") {
       return NextResponse.json(
@@ -31,17 +37,18 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       );
     }
-    const body = (await req.json()) as { id?: string };
-    const id = body.id;
-    console.log(id);
+    const body = (await req.json()) as DenyRequestBody;
+    const request_id = body.requestId;
+    const user_id = body.user_id;
+    const admin_message = body.finalMessage;
 
-    if (!id)
+    if (!request_id)
       return NextResponse.json({ error: "No ID provided" }, { status: 400 });
     const reqRow = await pool.query<{ checkout_status: string }>(
       `
             SELECT checkout_status FROM asset_checkout WHERE checkout_id = $1
             `,
-      [id],
+      [request_id],
     );
     if (reqRow.rowCount === 0) {
       return NextResponse.json({ error: "Request not found" }, { status: 400 });
@@ -52,24 +59,23 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    console.log(
-      "SQL query:",
-      `
-        UPDATE asset_checkout
-        SET checkout_status = $1
-        WHERE checkout_id = $2
-        `,
-    );
-    console.log("Params:", ["DENIED", id]);
+
     await pool.query(
       `
             UPDATE asset_checkout
             SET checkout_status = $1
             WHERE checkout_id = $2
             `,
-      ["DENIED", id],
+      ["DENIED", request_id],
     );
-    broadcastEvent({ type: "DENIED", requestId: id });
+    await pool.query(
+      `
+      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text)
+      VALUES ($1, $2, $3)
+      `,
+      [adminId, user_id, admin_message],
+    );
+    broadcastEvent({ type: "DENIED", requestId: request_id });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error(err);

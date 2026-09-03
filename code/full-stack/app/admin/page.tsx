@@ -3,13 +3,13 @@
 import ActiveAssetsView from "./components/ActiveCheckout";
 import AssetHistoryView from "./components/RequestHistory";
 import RequestsView from "./components/Requests";
-import { AssetCheckout, Asset } from "../types";
+import { AssetCheckout, Asset, AssetCheckoutDetails } from "../types";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NewManageAssetsView from "./components/NewManageAssets";
 
 export default function AdminDashboard() {
-  const [requests, setRequests] = useState<AssetCheckout[]>([]);
+  const [requests, setRequests] = useState<AssetCheckoutDetails[]>([]);
   const [active, setActive] = useState<AssetCheckout[]>([]);
   const [inactive, setInactive] = useState<AssetCheckout[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);

@@ -6,7 +6,7 @@ import { broadcastEvent } from "../sse/route";
 export async function GET(req: NextRequest) {
   const result = await pool.query(
     `
-        SELECT ac.checkout_id, a.name AS asset, u.name AS user, ac.checkout_status, ac.request_date
+        SELECT ac.checkout_id, a.name AS asset, u.name AS user, ac.checkout_status, ac.request_date, ac.request_reason, u.user_id, u.email
 FROM asset_checkout ac JOIN users u ON ac.user_id = u.user_id 
 JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
         `,
@@ -17,6 +17,7 @@ JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
 type CreateRequestBody = {
   assetId?: string;
   requesterName?: string;
+  requestReason?: string;
 };
 
 function stringToStableInteger(value: string): number {
@@ -30,9 +31,9 @@ function stringToStableInteger(value: string): number {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CreateRequestBody;
+    console.log("FULL BODY:", body);
     const assetId = body.assetId?.trim();
-    const requesterName = body.requesterName?.trim() ?? "";
-
+    const request_reason = body.requestReason;
     if (!assetId) {
       return NextResponse.json(
         { error: "assetId is required" },
@@ -70,10 +71,10 @@ export async function POST(req: NextRequest) {
 
     const inserted = await pool.query<{ user_id: string }>(
       `
-            INSERT INTO asset_checkout (asset_id, user_id, checkout_status)
-            VALUES ($1, $2, 'PENDING')
+            INSERT INTO asset_checkout (asset_id, user_id, checkout_status, request_reason)
+            VALUES ($1, $2, 'PENDING', $3)
             `,
-      [assetId, userIdValue],
+      [assetId, userIdValue, request_reason],
     );
 
     const requestId = inserted.rows[0]?.user_id;

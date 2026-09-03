@@ -153,8 +153,14 @@ export default function CreateAssetBox({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-black bg-white p-5 text-black shadow-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-black bg-white p-5 text-black shadow-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
 
         <div className="mb-8 flex items-center justify-between border-b border-black pb-4">

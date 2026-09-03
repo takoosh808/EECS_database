@@ -176,8 +176,14 @@ export default function EditAssetPanel({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-black bg-white p-5 text-black shadow-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-black bg-white p-5 text-black shadow-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
 
         <div className="mb-8 flex items-center justify-between border-b border-black pb-4">
@@ -185,7 +191,7 @@ export default function EditAssetPanel({
 
           <button
             type="button"
-            className="text-2xl leading-none"
+            className="text-2xl leading-none cursor-pointer"
             aria-label="Close"
             onClick={onClose}
           >
@@ -215,7 +221,7 @@ export default function EditAssetPanel({
                 onClick={() =>
                   setManageOpen(manageOpen === "category" ? null : "category")
                 }
-                className="rounded border border-black px-3 py-2 hover:bg-black hover:text-white"
+                className="rounded border border-black px-3 py-2 hover:bg-black hover:text-white cursor-pointer"
                 aria-label="Manage categories"
                 title="Manage Categories"
               >
@@ -241,7 +247,7 @@ export default function EditAssetPanel({
                         type="button"
                         onClick={() => removeCategoryTag(category_id)}
                         aria-label={`Remove ${category.name}`}
-                        className="leading-none hover:text-gray-300"
+                        className="leading-none hover:text-gray-300 cursor-pointer"
                       >
                         ×
                       </button>
@@ -289,7 +295,7 @@ export default function EditAssetPanel({
               <button
                 type="button"
                 onClick={createCategory}
-                className="rounded-md border border-black px-4 py-2 hover:bg-black hover:text-white"
+                className="rounded-md border border-black px-4 py-2 hover:bg-black hover:text-white cursor-pointer"
               >
                 + Add
               </button>
@@ -304,7 +310,7 @@ export default function EditAssetPanel({
                   <button
                     type="button"
                     onClick={() => setManageOpen(null)}
-                    className="text-xl"
+                    className="text-xl cursor-pointer"
                   >
                     ×
                   </button>
@@ -324,7 +330,7 @@ export default function EditAssetPanel({
                         <button
                           type="button"
                           onClick={() => deleteCategory(category.name)}
-                          className="rounded border border-black px-3 py-1 text-sm hover:bg-black hover:text-white"
+                          className="rounded border border-black px-3 py-1 text-sm hover:bg-black hover:text-white cursor-pointer"
                         >
                           Delete
                         </button>
@@ -373,7 +379,7 @@ export default function EditAssetPanel({
           <div className="flex justify-end gap-3 border-t border-black pt-6">
             <button
               type="button"
-              className="rounded-md border border-black px-6 py-3 hover:bg-gray-100"
+              className="rounded-md border border-black px-6 py-3 hover:bg-gray-100 cursor-pointer"
               onClick={onClose}
             >
               Cancel
@@ -381,7 +387,7 @@ export default function EditAssetPanel({
 
             <button
               type="submit"
-              className="rounded-md bg-black px-6 py-3 text-white hover:bg-gray-800"
+              className="rounded-md bg-black px-6 py-3 text-white hover:bg-gray-800 cursor-pointer"
             >
               Save Changes
             </button>

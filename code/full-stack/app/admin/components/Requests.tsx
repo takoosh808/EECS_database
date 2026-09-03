@@ -1,42 +1,16 @@
 "use client";
-import { AssetCheckout } from "../../types";
-
+import { AssetCheckout, AssetCheckoutDetails } from "../../types";
+import { useState } from "react";
+import ReviewRequestBox from "./ReviewRequestBox";
 type Props = {
-  data: AssetCheckout[];
+  data: AssetCheckoutDetails[];
 };
 
 //View for requested assets
 export default function RequestsView({ data }: Props) {
-  //Function for approving requests which calls aprove API route
-  async function approveRequests(requestId: string) {
-    console.log("Attempting to approve request: ", requestId);
-    try {
-      const res = await fetch("/api/requests/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: requestId }),
-      });
-      if (!res.ok) throw new Error("Failed to approve request");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  async function denyRequest(requestId: string) {
-    console.log("REQUEST ID:", requestId);
-    try {
-      const res = await fetch("/api/requests/deny", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: requestId }),
-      });
-      const data = await res.json();
-      console.log("Status:", res.status);
-      console.log("Response:", data);
-      if (!res.ok) throw new Error("Failed to deny request");
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  const [showReviewRequest, setShowReviewRequest] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<AssetCheckoutDetails>();
+
   return (
     <div className="bg-white shadow-lg p-6 max-w-6xl mx-auto">
       <h2 className="text-1xl font-bold mb-4">
@@ -68,18 +42,22 @@ export default function RequestsView({ data }: Props) {
                 <div>{req.checkout_status}</div>
                 <div>
                   <button
-                    className="bg-green-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
-                    onClick={() => approveRequests(req.checkout_id)}
+                    className="bg-gray-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
+                    onClick={() => {
+                      setShowReviewRequest(true);
+                      setSelectedAsset(req);
+                    }}
                   >
-                    Approve
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
-                    onClick={() => denyRequest(req.checkout_id)}
-                  >
-                    Deny
+                    Review
                   </button>
                 </div>
+                {showReviewRequest && selectedAsset && (
+                  <ReviewRequestBox
+                    onClose={() => setShowReviewRequest(false)}
+                    request={req}
+                    adminEmail={req.email}
+                  ></ReviewRequestBox>
+                )}
               </div>
             ))}
           </div>

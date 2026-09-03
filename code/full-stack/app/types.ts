@@ -12,8 +12,10 @@ export type AssetCheckout = {
   request_date: string;
 };
 
-export type AssetCheckoutWithDetails = AssetCheckout & {
-  checkout_id: string;
+export type AssetCheckoutDetails = AssetCheckout & {
+  request_reason: string;
+  user_id: string;
+  email: string;
 };
 
 export type asset_update = {
