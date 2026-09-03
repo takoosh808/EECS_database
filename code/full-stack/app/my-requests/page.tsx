@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
-import { AssetCheckout } from "../types";
+import { AssetCheckout, MyAssets, MyRequests } from "../types";
 
-type RequestStatus = AssetCheckout["checkout_status"] | "DENIED";
+type RequestStatus = MyRequests["checkout_status"] | "DENIED";
 
 function safeDate(value: string | null | undefined): string {
   if (!value) {
@@ -18,7 +18,7 @@ function safeDate(value: string | null | undefined): string {
 }
 
 export default function MyRequestsPage() {
-  const [requests, setRequests] = useState<AssetCheckout[]>([]);
+  const [requests, setRequests] = useState<MyRequests[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +30,7 @@ export default function MyRequestsPage() {
         throw new Error("Failed to load your requests.");
       }
       const data = (await response.json()) as unknown;
-      setRequests(Array.isArray(data) ? (data as AssetCheckout[]) : []);
+      setRequests(Array.isArray(data) ? (data as MyRequests[]) : []);
     } catch (err) {
       setError((err as Error).message || "Failed to load your requests.");
       setRequests([]);
@@ -71,7 +71,7 @@ export default function MyRequestsPage() {
         acc[status] = (acc[status] ?? 0) + 1;
         return acc;
       },
-      {} as Record<RequestStatus, number>
+      {} as Record<RequestStatus, number>,
     );
   }, [requests]);
 
@@ -84,11 +84,21 @@ export default function MyRequestsPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-3 text-xs">
-          <span className="rounded-md bg-gray-100 px-2 py-1">All: {requests.length}</span>
-          <span className="rounded-md bg-yellow-100 px-2 py-1">Pending: {statusCounts.PENDING ?? 0}</span>
-          <span className="rounded-md bg-green-100 px-2 py-1">Active: {statusCounts.ACTIVE ?? 0}</span>
-          <span className="rounded-md bg-red-100 px-2 py-1">Denied: {statusCounts.DENIED ?? 0}</span>
-          <span className="rounded-md bg-blue-100 px-2 py-1">Returned: {statusCounts.RETURNED ?? 0}</span>
+          <span className="rounded-md bg-gray-100 px-2 py-1">
+            All: {requests.length}
+          </span>
+          <span className="rounded-md bg-yellow-100 px-2 py-1">
+            Pending: {statusCounts.PENDING ?? 0}
+          </span>
+          <span className="rounded-md bg-green-100 px-2 py-1">
+            Active: {statusCounts.ACTIVE ?? 0}
+          </span>
+          <span className="rounded-md bg-red-100 px-2 py-1">
+            Denied: {statusCounts.DENIED ?? 0}
+          </span>
+          <span className="rounded-md bg-blue-100 px-2 py-1">
+            Returned: {statusCounts.RETURNED ?? 0}
+          </span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -97,8 +107,7 @@ export default function MyRequestsPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-gray-50 text-gray-700">
               <tr>
-                <th className="px-3 py-2 font-semibold">Request ID</th>
-                <th className="px-3 py-2 font-semibold">Asset ID</th>
+                <th className="px-3 py-2 font-semibold">Asset</th>
                 <th className="px-3 py-2 font-semibold">Status</th>
                 <th className="px-3 py-2 font-semibold">Requested</th>
                 <th className="px-3 py-2 font-semibold">Returned</th>
@@ -107,7 +116,10 @@ export default function MyRequestsPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td className="px-3 py-4 text-center text-gray-500" colSpan={5}>
+                  <td
+                    className="px-3 py-4 text-center text-gray-500"
+                    colSpan={5}
+                  >
                     Loading your requests...
                   </td>
                 </tr>
@@ -115,7 +127,10 @@ export default function MyRequestsPage() {
 
               {!loading && requests.length === 0 && (
                 <tr>
-                  <td className="px-3 py-4 text-center text-gray-500" colSpan={5}>
+                  <td
+                    className="px-3 py-4 text-center text-gray-500"
+                    colSpan={5}
+                  >
                     You do not have any requests yet.
                   </td>
                 </tr>
@@ -123,9 +138,11 @@ export default function MyRequestsPage() {
 
               {!loading &&
                 requests.map((req) => (
-                  <tr key={req.id} className="border-t border-gray-200">
-                    <td className="px-3 py-2">{req.id}</td>
-                    <td className="px-3 py-2">{req.asset_id}</td>
+                  <tr
+                    key={req.checkout_id}
+                    className="border-t border-gray-200"
+                  >
+                    <td className="px-3 py-2">{req.asset}</td>
                     <td className="px-3 py-2">{req.checkout_status}</td>
                     <td className="px-3 py-2">{safeDate(req.request_date)}</td>
                     <td className="px-3 py-2">{safeDate(req.returned_at)}</td>

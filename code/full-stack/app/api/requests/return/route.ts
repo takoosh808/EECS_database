@@ -22,9 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const cookies = req.cookies;
     const userId = cookies.get("auth_user")?.value;
-    console.log("RETURN USER ID:", userId);
     const userRole = await getUserRole(userId);
-    console.log("RETURN USER ROLE:", userRole);
 
     if (userRole !== "admin") {
       return NextResponse.json(
@@ -34,9 +32,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as { checkout_id?: string };
-    console.log("RETURN BODY:", body);
     const checkout_id = body.checkout_id;
-    console.log("RETURNING CHECKOUT:", checkout_id);
+
     if (!checkout_id)
       return NextResponse.json({ error: "No ID provided" }, { status: 400 });
     const reqRow = await pool.query<{ checkout_status: string }>(
@@ -58,7 +55,7 @@ export async function POST(req: NextRequest) {
     await pool.query(
       `
             UPDATE asset_checkout 
-            SET checkout_status = $1
+            SET checkout_status = $1, returned_at = CURRENT_TIMESTAMP
             WHERE checkout_id = $2
             `,
       ["RETURNED", checkout_id],

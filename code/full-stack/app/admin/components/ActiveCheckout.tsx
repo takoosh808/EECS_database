@@ -47,7 +47,10 @@ export default function ActiveAssetsView({ data }: Props) {
                 key={active.checkout_id}
                 className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{active.user}</div>
+                <div>
+                  <div>{active.user}</div>
+                  <div className="text-sm text-gray-500">{active.email}</div>
+                </div>
                 <div>{active.asset}</div>
                 <div>{new Date(active.request_date).toLocaleDateString()}</div>
                 <div>{active.checkout_status}</div>

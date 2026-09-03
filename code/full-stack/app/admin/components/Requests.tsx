@@ -36,7 +36,10 @@ export default function RequestsView({ data }: Props) {
                 key={req.checkout_id}
                 className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{req.user}</div>
+                <div>
+                  <div>{req.user}</div>
+                  <div className="text-sm text-gray-500">{req.email}</div>
+                </div>
                 <div>{req.asset}</div>
                 <div>{new Date(req.request_date).toLocaleDateString()}</div>
                 <div>{req.checkout_status}</div>

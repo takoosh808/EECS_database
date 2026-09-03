@@ -24,32 +24,41 @@ export async function GET(req: NextRequest) {
         AND table_name = 'asset_checkout'
         AND column_name = 'user_id'
       LIMIT 1
-      `
+      `,
     );
 
     const dataType = userIdColumnType.rows[0]?.data_type ?? "integer";
     let userIdValue: string | number;
 
-    if (dataType === "uuid" || dataType === "text" || dataType === "character varying") {
+    if (
+      dataType === "uuid" ||
+      dataType === "text" ||
+      dataType === "character varying"
+    ) {
       userIdValue = authUser;
     } else {
       const numeric = Number.parseInt(authUser, 10);
-      userIdValue = Number.isNaN(numeric) ? stringToStableInteger(authUser) : numeric;
+      userIdValue = Number.isNaN(numeric)
+        ? stringToStableInteger(authUser)
+        : numeric;
     }
 
     const result = await pool.query(
       `
-      SELECT id, asset_id, user_id, checkout_status, request_date, checkout_length, processed_by, returned_at
-      FROM asset_checkout
-      WHERE user_id = $1
-      ORDER BY request_date DESC NULLS LAST
+      SELECT ac.checkout_id, a.name AS asset, ac.checkout_status, ac.request_date, ac.returned_at
+      FROM asset_checkout ac JOIN assets a ON ac.asset_id = a.asset_id
+      WHERE ac.user_id = $1
+      ORDER BY ac.request_date DESC
       `,
-      [userIdValue]
+      [userIdValue],
     );
 
     return NextResponse.json(result.rows);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Failed to fetch user requests" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch user requests" },
+      { status: 500 },
+    );
   }
 }

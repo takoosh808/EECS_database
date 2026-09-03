@@ -97,14 +97,40 @@ export default function UserHomePage() {
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetRow | null>(null);
   const [requestAsset, setRequestAsset] = useState<AssetRow | null>(null);
-  const [requesterName, setRequesterName] = useState("");
-  const [requestLab, setRequestLab] = useState("");
+  const [checkoutLength, setCheckoutLength] = useState("");
   const [requestReason, setRequestReason] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<
     Record<string, string>
   >({});
+
+  const CHECKOUT_LENGTH_OPTIONS = [
+    { value: "1_month", label: "One Month", months: 1, weeks: 4 },
+    { value: "1_semester", label: "One Semester", months: 4, weeks: 16 },
+    { value: "2_semesters", label: "Two Semesters", months: 8, weeks: 32 },
+    { value: "1_year", label: "One Year", months: 12, weeks: 52 },
+  ] as const;
+
+  function formatCheckoutRange(months?: number, weeks?: number): string {
+    const start = new Date();
+    const end = new Date(start);
+
+    if (months) {
+      end.setMonth(end.getMonth() + months);
+    } else if (weeks) {
+      end.setDate(end.getDate() + weeks * 7);
+    }
+
+    const fmt = (d: Date) =>
+      d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+
+    return `${fmt(start)} - ${fmt(end)}`;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -276,7 +302,6 @@ export default function UserHomePage() {
                         }
                         setRequestAsset(asset);
                         setRequestError(null);
-                        setRequesterName("");
                       }}
                       disabled={asset.rentedOut}
                       className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -350,11 +375,6 @@ export default function UserHomePage() {
                 event.preventDefault();
                 setRequestError(null);
 
-                if (!requesterName.trim()) {
-                  setRequestError("Please fill out name");
-                  return;
-                }
-
                 try {
                   setRequestSubmitting(true);
                   const response = await fetch("/api/requests", {
@@ -364,7 +384,6 @@ export default function UserHomePage() {
                     },
                     body: JSON.stringify({
                       assetId: requestAsset.id,
-                      requesterName,
                       requestReason,
                     }),
                   });
@@ -392,18 +411,27 @@ export default function UserHomePage() {
             >
               <div>
                 <label
-                  htmlFor="request-name"
+                  htmlFor="checkout-length"
                   className="mb-1 block text-sm font-medium text-gray-800"
                 >
-                  Name
+                  Checkout Length
                 </label>
-                <input
-                  id="request-name"
-                  value={requesterName}
-                  onChange={(event) => setRequesterName(event.target.value)}
+                <select
+                  id="checkout-length"
+                  value={checkoutLength}
+                  onChange={(event) => setCheckoutLength(event.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-                  placeholder="Your name"
-                />
+                >
+                  <option value="" disabled>
+                    Select a checkout length
+                  </option>
+                  {CHECKOUT_LENGTH_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} (
+                      {formatCheckoutRange(option.weeks, option.weeks)})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label

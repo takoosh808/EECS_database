@@ -31,7 +31,10 @@ export default function AssetHistoryView({ data }: Props) {
                 key={inactive.checkout_id}
                 className="grid grid-cols-4 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
               >
-                <div>{inactive.user}</div>
+                <div>
+                  <div>{inactive.user}</div>
+                  <div className="text-sm text-gray-500">{inactive.email}</div>
+                </div>
                 <div>{inactive.asset}</div>
                 <div>
                   {new Date(

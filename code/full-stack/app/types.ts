@@ -3,6 +3,7 @@ export type AssetCheckout = {
   checkout_id: string;
   asset: string;
   user: string;
+  email: string;
   checkout_status:
     | "PENDING"
     | "ACTIVE"
@@ -25,6 +26,22 @@ export type asset_update = {
     | "RETURN_REQUESTED"
     | "RETURN_APPROVED"
     | "RETURNED";
+};
+
+export type MyRequests = {
+  checkout_id: string;
+  asset: string;
+  checkout_status: string;
+  request_date: string;
+  returned_at: string;
+};
+
+export type MyAssets = {
+  checkout_id: string;
+  asset: string;
+  checkout_length: string;
+  request_date: string;
+  due_date: string;
 };
 
 export type Asset = {

@@ -16,7 +16,6 @@ JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
 
 type CreateRequestBody = {
   assetId?: string;
-  requesterName?: string;
   requestReason?: string;
 };
 

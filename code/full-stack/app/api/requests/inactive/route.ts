@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const result = await pool.query(
       `
-        SELECT ac.checkout_id, u.name AS user, a.name AS asset, ac.request_date, ac.checkout_status FROM asset_checkout ac JOIN users u ON
+        SELECT ac.checkout_id, u.name AS user, a.name AS asset, u.email, ac.request_date, ac.checkout_status FROM asset_checkout ac JOIN users u ON
         ac.user_id = u.user_id JOIN assets a
         ON a.asset_id = ac.asset_id
         WHERE checkout_status = 'DENIED' 

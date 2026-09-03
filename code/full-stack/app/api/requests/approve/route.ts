@@ -18,12 +18,18 @@ async function getUserRole(
   }
 }
 
+type ApproveRequestBody = {
+  requestId: string;
+  finalMessage: string;
+  user_id: string;
+};
+
 //POST API route for approving requests
 export async function POST(req: NextRequest) {
   try {
     const cookies = req.cookies;
-    const userId = cookies.get("auth_user")?.value;
-    const userRole = await getUserRole(userId);
+    const adminId = cookies.get("auth_user")?.value;
+    const userRole = await getUserRole(adminId);
 
     if (userRole !== "admin") {
       return NextResponse.json(
@@ -31,10 +37,15 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       );
     }
-    const body = (await req.json()) as { id?: string };
-    const id = body.id;
+    const body = (await req.json()) as ApproveRequestBody;
+    const id = body.requestId;
+    const finalMessage = body.finalMessage;
+    const user_id = body.user_id;
     if (!id)
-      return NextResponse.json({ error: "No ID provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No checkout ID provided" },
+        { status: 400 },
+      );
     const reqRow = await pool.query<{ checkout_status: string }>(
       `
             SELECT checkout_status FROM asset_checkout WHERE checkout_id = $1
@@ -53,11 +64,20 @@ export async function POST(req: NextRequest) {
     await pool.query(
       `
             UPDATE asset_checkout 
-            SET checkout_status = $1 
+            SET checkout_status = $1, request_date = CURRENT_TIMESTAMP
             WHERE checkout_id = $2
             `,
       ["ACTIVE", id],
     );
+
+    await pool.query(
+      `
+      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text)
+      VALUES($1, $2, $3)
+      `,
+      [adminId, user_id, finalMessage],
+    );
+
     broadcastEvent({ type: "APPROVE", requestId: id });
     return NextResponse.json({ success: true });
   } catch (err) {
