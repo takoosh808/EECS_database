@@ -35,13 +35,14 @@ export default function ReviewRequestBox({
     }
     const finalMessage = adminMessage + " " + contactLine;
     const user_id = request.user_id;
+    const checkout_id = request.checkout_id;
     setError(null);
     setSubmitting("ALLOW");
     try {
       const res = await fetch("/api/requests/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, finalMessage, user_id }),
+        body: JSON.stringify({ requestId, finalMessage, user_id, checkout_id }),
       });
       if (!res.ok) throw new Error("Failed to approve request");
       onClose();
@@ -62,11 +63,12 @@ export default function ReviewRequestBox({
     setError(null);
     setSubmitting("DENY");
     const user_id = request.user_id;
+    const checkout_id = request.checkout_id;
     try {
       const res = await fetch("/api/requests/deny", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, finalMessage, user_id }),
+        body: JSON.stringify({ requestId, finalMessage, user_id, checkout_id }),
       });
       const data = await res.json();
       console.log("Status:", res.status);

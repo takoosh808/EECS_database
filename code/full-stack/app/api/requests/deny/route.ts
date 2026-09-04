@@ -22,6 +22,7 @@ type DenyRequestBody = {
   requestId: string;
   finalMessage: string;
   user_id: string;
+  checkout_id: string;
 };
 
 //POST API route for approving requests, very similar to approve but we use DENIED flag
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
     const request_id = body.requestId;
     const user_id = body.user_id;
     const admin_message = body.finalMessage;
+    const checkout_id = body.checkout_id;
 
     if (!request_id)
       return NextResponse.json({ error: "No ID provided" }, { status: 400 });
@@ -70,10 +72,10 @@ export async function POST(req: NextRequest) {
     );
     await pool.query(
       `
-      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text)
-      VALUES ($1, $2, $3)
+      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text, checkout_id)
+      VALUES ($1, $2, $3, $4)
       `,
-      [adminId, user_id, admin_message],
+      [adminId, user_id, admin_message, checkout_id],
     );
     broadcastEvent({ type: "DENIED", requestId: request_id });
     return NextResponse.json({ success: true });

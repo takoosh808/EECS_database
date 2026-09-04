@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS asset_checkout(
   checkout_status VARCHAR(30) DEFAULT 'PENDING',
   request_reason VARCHAR(1000),
   request_date TIMESTAMPTZ DEFAULT NOW(),
-  checkout_length INTEGER,
+  checkout_length VARCHAR(20),
   due_date TIMESTAMPTZ,
   returned_at TIMESTAMPTZ,
   CHECK (checkout_status IN ('PENDING','ACTIVE', 'RETURNED'))
@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS asset_checkout(
 --sender_id needs to reference admin id once the table exists for users
 CREATE TABLE IF NOT EXISTS asset_checkout_messages(
   message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  checkout_id UUID NOT NULL REFERENCES asset_checkout(checkout_id),
   sender_id UUID NOT NULL REFERENCES users(user_id),
   receiver_id UUID NOT NULL REFERENCES users(user_id),
   message_text TEXT NOT NULL,

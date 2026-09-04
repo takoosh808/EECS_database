@@ -5,65 +5,41 @@ import DashboardShell from "../components/DashboardShell";
 import { AssetRow } from "@/app/types";
 import { Asset } from "@/app/types";
 
-type ApiAsset = {
-  id: string;
-  name: string;
-  lab_id: string;
-  serial_number: string;
-};
-
 type ActiveCheckout = {
   asset_id: string;
   user_id: string;
   request_date: string | null;
-  request_details?: string | null;
 };
 
-type LabOption = {
-  id: string;
-  name: string;
-};
+const CHECKOUT_LENGTH_OPTIONS = [
+  { value: "1_month", label: "One Month", months: 1, weeks: 4 },
+  { value: "1_semester", label: "One Semester", months: 4, weeks: 16 },
+  { value: "2_semesters", label: "Two Semesters", months: 8, weeks: 32 },
+  { value: "1_year", label: "One Year", months: 12, weeks: 52 },
+] as const;
 
-function parseLabFromRequestDetails(
-  details: string | null | undefined,
-): string | null {
-  if (!details) {
-    return null;
+function formatCheckoutRange(months?: number, weeks?: number) {
+  const start = new Date();
+  const end = new Date(start);
+
+  if (months) {
+    end.setMonth(end.getMonth() + months);
+  } else if (weeks) {
+    end.setDate(end.getDate() + weeks * 7);
   }
-  const match = details.match(/Lab:\s*([^|]+)/i);
-  return match?.[1]?.trim() ?? null;
-}
 
-const SAMPLE_ASSETS: AssetRow[] = [
-  {
-    id: "a1",
-    name: "Dell Latitude 5520",
-    location: "Lab A - Cabinet 3",
-    rentedOut: true,
-    rentedTo: "Alex Morgan",
-    rentedOutAt: "2026-04-01",
-    description: "Standard faculty laptop with docking station and charger.",
-  },
-  {
-    id: "a2",
-    name: "Canon EOS R10 Camera",
-    location: "Media Room - Shelf 2",
-    rentedOut: false,
-    rentedTo: null,
-    rentedOutAt: null,
-    description: "Mirrorless camera kit with lens and battery pack.",
-  },
-  {
-    id: "a3",
-    name: "3D Printer Toolkit",
-    location: "Engineering Lab - Bin 8",
-    rentedOut: true,
-    rentedTo: "Jordan Lee",
-    rentedOutAt: "2026-03-30",
-    description:
-      "Nozzle set, maintenance tools, and replacement filament holders.",
-  },
-];
+  const fmt = (d: Date) =>
+    d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  return {
+    range: `${fmt(start)} - ${fmt(end)}`,
+    dueDate: end,
+  };
+}
 
 export function filterAssets(
   assets: AssetRow[],
@@ -90,8 +66,7 @@ export function filterAssets(
 }
 
 export default function UserHomePage() {
-  const [assets, setAssets] = useState<AssetRow[]>(SAMPLE_ASSETS);
-  const [labs, setLabs] = useState<LabOption[]>([]);
+  const [assets, setAssets] = useState<AssetRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
@@ -104,33 +79,7 @@ export default function UserHomePage() {
   const [requestConfirmationByAsset, setRequestConfirmationByAsset] = useState<
     Record<string, string>
   >({});
-
-  const CHECKOUT_LENGTH_OPTIONS = [
-    { value: "1_month", label: "One Month", months: 1, weeks: 4 },
-    { value: "1_semester", label: "One Semester", months: 4, weeks: 16 },
-    { value: "2_semesters", label: "Two Semesters", months: 8, weeks: 32 },
-    { value: "1_year", label: "One Year", months: 12, weeks: 52 },
-  ] as const;
-
-  function formatCheckoutRange(months?: number, weeks?: number): string {
-    const start = new Date();
-    const end = new Date(start);
-
-    if (months) {
-      end.setMonth(end.getMonth() + months);
-    } else if (weeks) {
-      end.setDate(end.getDate() + weeks * 7);
-    }
-
-    const fmt = (d: Date) =>
-      d.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-
-    return `${fmt(start)} - ${fmt(end)}`;
-  }
+  const [dueDate, setDueDate] = useState<Date>();
 
   useEffect(() => {
     let cancelled = false;
@@ -206,6 +155,18 @@ export default function UserHomePage() {
     () => filterAssets(assets, searchQuery, onlyRentedOut),
     [assets, searchQuery, onlyRentedOut],
   );
+
+  // Recomputed whenever the selected checkout length changes, so the
+  // displayed range always reflects "now" through the chosen end date.
+  const selectedRange = useMemo(() => {
+    const selectedOption = CHECKOUT_LENGTH_OPTIONS.find(
+      (option) => option.value === checkoutLength,
+    );
+    if (!selectedOption) {
+      return null;
+    }
+    return formatCheckoutRange(selectedOption.months, selectedOption.weeks);
+  }, [checkoutLength]);
 
   return (
     <DashboardShell>
@@ -385,6 +346,8 @@ export default function UserHomePage() {
                     body: JSON.stringify({
                       assetId: requestAsset.id,
                       requestReason,
+                      checkoutLength,
+                      dueDate,
                     }),
                   });
 
@@ -419,19 +382,46 @@ export default function UserHomePage() {
                 <select
                   id="checkout-length"
                   value={checkoutLength}
-                  onChange={(event) => setCheckoutLength(event.target.value)}
+                  onChange={(event) => {
+                    const selectedOption = CHECKOUT_LENGTH_OPTIONS.find(
+                      (option) => option.value === event.target.value,
+                    );
+
+                    if (!selectedOption) return;
+
+                    const computed = formatCheckoutRange(
+                      selectedOption.months,
+                      selectedOption.weeks,
+                    );
+
+                    setCheckoutLength(event.target.value);
+                    setDueDate(computed.dueDate);
+                  }}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
                 >
                   <option value="" disabled>
                     Select a checkout length
                   </option>
-                  {CHECKOUT_LENGTH_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label} (
-                      {formatCheckoutRange(option.weeks, option.weeks)})
-                    </option>
-                  ))}
+
+                  {CHECKOUT_LENGTH_OPTIONS.map((option) => {
+                    const { range } = formatCheckoutRange(
+                      option.months,
+                      option.weeks,
+                    );
+
+                    return (
+                      <option key={option.value} value={option.value}>
+                        {option.label} ({range})
+                      </option>
+                    );
+                  })}
                 </select>
+
+                {selectedRange && (
+                  <p className="mt-1 text-xs text-gray-600">
+                    {selectedRange.range}
+                  </p>
+                )}
               </div>
               <div>
                 <label

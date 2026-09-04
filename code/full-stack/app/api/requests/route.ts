@@ -17,6 +17,8 @@ JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
 type CreateRequestBody = {
   assetId?: string;
   requestReason?: string;
+  checkoutLength: string;
+  dueDate: string;
 };
 
 function stringToStableInteger(value: string): number {
@@ -30,6 +32,8 @@ function stringToStableInteger(value: string): number {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CreateRequestBody;
+    const checkout_length = body.checkoutLength;
+    const due_date = body.dueDate;
     console.log("FULL BODY:", body);
     const assetId = body.assetId?.trim();
     const request_reason = body.requestReason;
@@ -70,10 +74,10 @@ export async function POST(req: NextRequest) {
 
     const inserted = await pool.query<{ user_id: string }>(
       `
-            INSERT INTO asset_checkout (asset_id, user_id, checkout_status, request_reason)
-            VALUES ($1, $2, 'PENDING', $3)
+            INSERT INTO asset_checkout (asset_id, user_id, checkout_status, request_reason, checkout_length, due_date)
+            VALUES ($1, $2, 'PENDING', $3, $4, $5)
             `,
-      [assetId, userIdValue, request_reason],
+      [assetId, userIdValue, request_reason, checkout_length, due_date],
     );
 
     const requestId = inserted.rows[0]?.user_id;

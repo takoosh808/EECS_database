@@ -34,6 +34,9 @@ export type MyRequests = {
   checkout_status: string;
   request_date: string;
   returned_at: string;
+  message: string;
+  due_date: string;
+  checkout_length: string;
 };
 
 export type MyAssets = {

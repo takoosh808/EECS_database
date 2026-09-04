@@ -45,8 +45,12 @@ export async function GET(req: NextRequest) {
 
     const result = await pool.query(
       `
-      SELECT ac.checkout_id, a.name AS asset, ac.checkout_status, ac.request_date, ac.returned_at
-      FROM asset_checkout ac JOIN assets a ON ac.asset_id = a.asset_id
+      SELECT ac.checkout_id, a.name AS asset, ac.checkout_status, 
+      ac.request_date, ac.returned_at,
+      ac.due_date, ac.checkout_length, am.message_text AS message
+      FROM asset_checkout ac JOIN assets a ON ac.asset_id = a.asset_id 
+	    LEFT JOIN asset_checkout_messages am
+	    ON am.checkout_id = ac.checkout_id
       WHERE ac.user_id = $1
       ORDER BY ac.request_date DESC
       `,

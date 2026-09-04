@@ -22,6 +22,7 @@ type ApproveRequestBody = {
   requestId: string;
   finalMessage: string;
   user_id: string;
+  checkout_id: string;
 };
 
 //POST API route for approving requests
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as ApproveRequestBody;
     const id = body.requestId;
     const finalMessage = body.finalMessage;
+    const checkout_id = body.checkout_id;
     const user_id = body.user_id;
     if (!id)
       return NextResponse.json(
@@ -72,10 +74,10 @@ export async function POST(req: NextRequest) {
 
     await pool.query(
       `
-      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text)
-      VALUES($1, $2, $3)
+      INSERT INTO asset_checkout_messages (sender_id, receiver_id, message_text, checkout_id)
+      VALUES($1, $2, $3, $4)
       `,
-      [adminId, user_id, finalMessage],
+      [adminId, user_id, finalMessage, checkout_id],
     );
 
     broadcastEvent({ type: "APPROVE", requestId: id });

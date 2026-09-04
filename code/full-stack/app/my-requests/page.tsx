@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
-import { AssetCheckout, MyAssets, MyRequests } from "../types";
+import { MyRequests } from "../types";
+import ViewAssetDetailsView from "./AssetDetailsBox";
 
 type RequestStatus = MyRequests["checkout_status"] | "DENIED";
 
@@ -21,7 +22,8 @@ export default function MyRequestsPage() {
   const [requests, setRequests] = useState<MyRequests[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<MyRequests>();
   const fetchMyRequests = useCallback(async () => {
     try {
       setError(null);
@@ -107,6 +109,7 @@ export default function MyRequestsPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-gray-50 text-gray-700">
               <tr>
+                <th className="px-3 py-2 font-semibold">Details</th>
                 <th className="px-3 py-2 font-semibold">Asset</th>
                 <th className="px-3 py-2 font-semibold">Status</th>
                 <th className="px-3 py-2 font-semibold">Requested</th>
@@ -142,6 +145,21 @@ export default function MyRequestsPage() {
                     key={req.checkout_id}
                     className="border-t border-gray-200"
                   >
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700
+                 transition hover:bg-gray-200 active:bg-gray-300
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                        onClick={() => {
+                          setSelectedAsset(req);
+                          setShowDetails(true);
+                        }}
+                      >
+                        View
+                      </button>
+                    </td>
+
                     <td className="px-3 py-2">{req.asset}</td>
                     <td className="px-3 py-2">{req.checkout_status}</td>
                     <td className="px-3 py-2">{safeDate(req.request_date)}</td>
@@ -150,6 +168,12 @@ export default function MyRequestsPage() {
                 ))}
             </tbody>
           </table>
+          {showDetails && selectedAsset && (
+            <ViewAssetDetailsView
+              onClose={() => setShowDetails(false)}
+              asset={selectedAsset}
+            />
+          )}
         </div>
       </section>
     </DashboardShell>
