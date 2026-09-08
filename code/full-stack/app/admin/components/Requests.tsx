@@ -4,6 +4,7 @@ import { useState } from "react";
 import ReviewRequestBox from "./ReviewRequestBox";
 type Props = {
   data: AssetCheckoutDetails[];
+  onActionComplete?: () => void;
 };
 
 //View for requested assets

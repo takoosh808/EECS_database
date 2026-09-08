@@ -25,16 +25,17 @@ export default function ActiveAssetsView({ data }: Props) {
 
   //Display active assets
   return (
-    <div className="bg-white shadow-lg p-6 max-w-6xl mx-auto">
+    <div className="bg-white border border-zinc-200 shadow-sm p-6 max-w-6xl mx-auto">
       <h2 className="text-1xl font-bold mb-4">
         Active Requests ({data.length})
       </h2>
       {data.length === 0 && (
-        <p className="text-gray-500 text-center">No pending requests.</p>
+        <p className="text-zinc-500 text-center">No pending requests.</p>
       )}
+      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       {data.length !== 0 && (
         <>
-          <div className="grid grid-cols-5 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div className="grid grid-cols-5 gap-4 font-semibold text-zinc-600 border-b border-zinc-200 pb-2 mb-2">
             <div>USER</div>
             <div>ASSET</div>
             <div>CHECKED OUT</div>
@@ -45,7 +46,7 @@ export default function ActiveAssetsView({ data }: Props) {
             {data.map((active) => (
               <div
                 key={active.checkout_id}
-                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
+                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-crimson-50 border border-crimson-100"
               >
                 <div>
                   <div>{active.user}</div>
@@ -56,7 +57,7 @@ export default function ActiveAssetsView({ data }: Props) {
                 <div>{active.checkout_status}</div>
                 <div>
                   <button
-                    className="border border-gray-400 text-black px-2 py-1 rounded mr-2 cursor-pointer"
+                    className="border border-zinc-300 text-zinc-700 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-zinc-100"
                     onClick={() => ApproveReturn(active.checkout_id)}
                   >
                     Mark Returned

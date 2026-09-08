@@ -4,11 +4,11 @@ import { broadcastEvent } from "../../sse/route";
 
 async function getUserRole(
   userId: string | undefined,
-): Promise<"user" | "admin" | null> {
+): Promise<"user" | "admin" | "owner" | null> {
   if (!userId) return null;
   try {
-    const result = await pool.query<{ role: "user" | "admin" }>(
-      "SELECT role FROM users WHERE user_id::text = $1",
+    const result = await pool.query<{ role: "user" | "admin" | "owner" }>(
+      "SELECT role FROM users WHERE id::text = $1",
       [userId],
     );
     return result.rows[0]?.role ?? null;
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const userId = cookies.get("auth_user")?.value;
     const userRole = await getUserRole(userId);
 
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "owner") {
       return NextResponse.json(
         { error: "Unauthorized: Admin access required" },
         { status: 403 },

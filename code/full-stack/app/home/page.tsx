@@ -67,6 +67,7 @@ export function filterAssets(
 
 export default function UserHomePage() {
   const [assets, setAssets] = useState<AssetRow[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
@@ -82,6 +83,9 @@ export default function UserHomePage() {
   const [dueDate, setDueDate] = useState<Date>();
 
   useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    setIsAdmin(role === "admin");
+
     let cancelled = false;
 
     async function loadDashboardAssets() {
@@ -402,7 +406,6 @@ export default function UserHomePage() {
                   <option value="" disabled>
                     Select a checkout length
                   </option>
-
                   {CHECKOUT_LENGTH_OPTIONS.map((option) => {
                     const { range } = formatCheckoutRange(
                       option.months,
