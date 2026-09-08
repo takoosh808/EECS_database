@@ -159,7 +159,6 @@ export default function AdminDashboard() {
       <RequestsView data={requests} />
       <ActiveAssetsView data={active} />
       <AssetHistoryView data={inactive} />
-      <EditAssetsView data={assets} />
 
       <button
         className="cursor-pointer"
@@ -167,13 +166,16 @@ export default function AdminDashboard() {
       >
         Create New Asset
       </button>
-      {showCreatePanel && (
-        <CreateAssetsPanel
-          onClose={() => setShowCreatePanel(false)}
-          onCreate={handleCreateAsset}
-          assets={assets}
-        />
-      )}
+      <div>
+        {activeButton === "requests" && (
+          <>
+            <RequestsView data={requests} />
+            <ActiveAssetsView data={active} />
+            <AssetHistoryView data={inactive} />
+          </>
+        )}
+        {activeButton === "assets" && <NewManageAssetsView />}
+      </div>
     </header>
   );
 }

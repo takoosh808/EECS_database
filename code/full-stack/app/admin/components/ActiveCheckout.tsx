@@ -6,10 +6,12 @@ import { NEXT_HMR_REFRESH_HASH_COOKIE } from "next/dist/client/components/app-ro
 
 type Props = {
   data: AssetCheckout[];
+  onActionComplete?: () => void;
 };
 
 //View for active checkouts
 export default function ActiveAssetsView({ data }: Props) {
+  const [error, setError] = useState<string | null>(null);
   async function ApproveReturn(checkout_id: string) {
     try {
       const res = await fetch("/api/requests/return", {
