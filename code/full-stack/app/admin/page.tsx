@@ -7,6 +7,7 @@ import { AssetCheckout, Asset, AssetCheckoutDetails } from "../types";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NewManageAssetsView from "./components/NewManageAssets";
+import DashboardShell from "../components/DashboardShell";
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<AssetCheckoutDetails[]>([]);
@@ -22,30 +23,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
-    if (userRole !== "admin" && userRole !== "owner") {
+    if (userRole !== "admin") {
       router.push("/home");
       return;
     }
     setIsAuthorized(true);
     setIsChecking(false);
   }, [router]);
-
-  const handleCreateAsset = (newAsset: Asset) => {
-    // send to backend
-    //we need to do checks here whenever a new asset is created.
-
-    //first we need to check the fields that are referenced
-
-    fetch("/api/assets/edit/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newAsset),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setAssets([...assets, newAsset]);
-      });
-  };
 
   const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
@@ -127,55 +111,57 @@ export default function AdminDashboard() {
     return () => evtSource.close();
   }, [fetchRequests, fetchActive, fetchInactive, fetchAssets]);
 
-  if (isChecking) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        Checking permissions...
-      </div>
-    );
-  }
-
-  if (!isAuthorized) {
-    return null;
-  }
-
   return (
-    <header className="">
-      <div className="mx-auto px-8 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <DashboardShell>
+      <div>
+        <header className="flex justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold ">Admin Dashboard</h1>
             <a>Manage assets and handle asset requests</a>
           </div>
+        </header>
+        <div className="mx-auto px-100 py-4 flex justify-end">
           <button
             type="button"
             onClick={() => router.push("/home")}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            className=" cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
           >
             Back to Home
           </button>
         </div>
+        <div>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex text-sm font-medium bg-gray-200 p-1 rounded-md w-fit">
+              <button
+                onClick={() => setActiveButton("requests")}
+                className={`cursor-pointer  rounded px-4 py-1 transition ${
+                  activeButton === "requests" ? "bg-gray-100" : ""
+                }`}
+              >
+                Requests
+              </button>
+              <button
+                onClick={() => setActiveButton("assets")}
+                className={`cursor-pointer  rounded px-4 py-1 transition ${
+                  activeButton === "assets" ? "bg-gray-100" : ""
+                }`}
+              >
+                Assets
+              </button>
+            </div>
+            <div>
+              {activeButton === "requests" && (
+                <>
+                  <RequestsView data={requests} />
+                  <ActiveAssetsView data={active} />
+                  <AssetHistoryView data={inactive} />
+                </>
+              )}
+              {activeButton === "assets" && <NewManageAssetsView />}
+            </div>
+          </div>
+        </div>
       </div>
-      <RequestsView data={requests} />
-      <ActiveAssetsView data={active} />
-      <AssetHistoryView data={inactive} />
-
-      <button
-        className="cursor-pointer"
-        onClick={() => setShowCreatePanel(true)}
-      >
-        Create New Asset
-      </button>
-      <div>
-        {activeButton === "requests" && (
-          <>
-            <RequestsView data={requests} />
-            <ActiveAssetsView data={active} />
-            <AssetHistoryView data={inactive} />
-          </>
-        )}
-        {activeButton === "assets" && <NewManageAssetsView />}
-      </div>
-    </header>
+    </DashboardShell>
   );
 }

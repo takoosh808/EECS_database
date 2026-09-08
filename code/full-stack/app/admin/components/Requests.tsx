@@ -11,19 +11,20 @@ type Props = {
 export default function RequestsView({ data }: Props) {
   const [showReviewRequest, setShowReviewRequest] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetCheckoutDetails>();
-
+  const [error, setError] = useState<string | null>(null);
   return (
-    <div className="bg-white shadow-lg p-6 max-w-6xl mx-auto">
+    <div className="bg-white rounded-lg border border-zinc-200 shadow-sm p-6 max-w-6xl mx-auto">
       <h2 className="text-1xl font-bold mb-4">
         Pending Requests ({data.length})
       </h2>
       {data.length === 0 && (
-        <p className="text-gray-500 text-center">No pending requests.</p>
+        <p className="text-zinc-500 text-center">No pending requests.</p>
       )}
+      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       {data.length !== 0 && (
         <>
           {/* Table header */}
-          <div className="grid grid-cols-5 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div className="grid grid-cols-5 gap-4 font-semibold text-zinc-600 border-b border-zinc-200 pb-2 mb-2">
             <div>USER</div>
             <div>ASSET</div>
             <div>REQUEST DATE</div>
@@ -35,7 +36,7 @@ export default function RequestsView({ data }: Props) {
             {data.map((req) => (
               <div
                 key={req.checkout_id}
-                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-blue-50 border border-blue-200"
+                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-crimson-50 border border-crimson-100"
               >
                 <div>
                   <div>{req.user}</div>

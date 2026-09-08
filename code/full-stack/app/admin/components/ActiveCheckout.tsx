@@ -59,7 +59,7 @@ export default function ActiveAssetsView({ data }: Props) {
                 <div>{active.checkout_status}</div>
                 <div>
                   <button
-                    className="border border-zinc-300 text-zinc-700 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-zinc-100"
+                    className="bg-gray-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
                     onClick={() => ApproveReturn(active.checkout_id)}
                   >
                     Mark Returned
