@@ -12,10 +12,10 @@ type ActiveCheckout = {
 };
 
 const CHECKOUT_LENGTH_OPTIONS = [
-  { value: "1_month", label: "One Month", months: 1, weeks: 4 },
-  { value: "1_semester", label: "One Semester", months: 4, weeks: 16 },
-  { value: "2_semesters", label: "Two Semesters", months: 8, weeks: 32 },
-  { value: "1_year", label: "One Year", months: 12, weeks: 52 },
+  { value: "1 Month", label: "One Month", months: 1, weeks: 4 },
+  { value: "1 Semester", label: "One Semester", months: 4, weeks: 16 },
+  { value: "2 Semesters", label: "Two Semesters", months: 8, weeks: 32 },
+  { value: "1 Year", label: "One Year", months: 12, weeks: 52 },
 ] as const;
 
 function formatCheckoutRange(months?: number, weeks?: number) {

@@ -73,7 +73,7 @@ export default function ViewAssetPanel({
 
         <div className="space-y-6">
           {/* Name */}
-          <DetailField label="Name">
+          <DetailField label="Asset Name">
             <p className="text-base">{asset.asset || "-"}</p>
           </DetailField>
 

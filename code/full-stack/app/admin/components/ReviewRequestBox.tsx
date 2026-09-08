@@ -33,7 +33,7 @@ export default function ReviewRequestBox({
       setError("Please add a response before approving.");
       return;
     }
-    const finalMessage = adminMessage + " " + contactLine;
+    const finalMessage = adminMessage + "\n" + contactLine;
     const user_id = request.user_id;
     const checkout_id = request.checkout_id;
     setError(null);
@@ -59,7 +59,7 @@ export default function ReviewRequestBox({
       setError("Please add a response before denying.");
       return;
     }
-    const finalMessage = adminMessage + " " + contactLine;
+    const finalMessage = adminMessage + "\n" + contactLine;
     setError(null);
     setSubmitting("DENY");
     const user_id = request.user_id;
