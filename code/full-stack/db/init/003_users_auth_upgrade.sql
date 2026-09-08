@@ -33,10 +33,10 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin') THEN
     UPDATE users
     SET role = 'admin'
-    WHERE id = (
-      SELECT id
+    WHERE user_id = (
+      SELECT user_id
       FROM users
-      ORDER BY created_at ASC NULLS LAST, id ASC
+      ORDER BY created_at ASC NULLS LAST, user_id ASC
       LIMIT 1
     );
   END IF;

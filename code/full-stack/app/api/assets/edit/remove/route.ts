@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
             `,
       [asset.asset_id],
     );
-    broadcastEvent({ type: "REMOVE_ASSET", asset_id: asset.id });
+    broadcastEvent({ type: "REMOVE_ASSET", asset_id: asset.asset_id });
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
     const asset: Asset = await req.json();

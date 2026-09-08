@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as CreateRequestBody;
     const checkout_length = body.checkoutLength;
     const due_date = body.dueDate;
-    console.log("FULL BODY:", body);
     const assetId = body.assetId?.trim();
     const request_reason = body.requestReason;
     if (!assetId) {

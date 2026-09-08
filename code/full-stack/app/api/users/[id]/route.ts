@@ -14,20 +14,31 @@ type UpdateUserBody = {
 async function isOwner(req: NextRequest): Promise<boolean> {
   const userId = req.cookies.get("auth_user")?.value;
   if (!userId) return false;
-  const result = await pool.query<{ role: string }>("SELECT role FROM users WHERE id::text = $1 LIMIT 1", [userId]);
+  const result = await pool.query<{ role: string }>(
+    "SELECT role FROM users WHERE user_id::text = $1 LIMIT 1",
+    [userId],
+  );
   return result.rows[0]?.role === "owner";
 }
 
 function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, Buffer.from(salt, "hex"), 64).toString("hex");
+  const hash = scryptSync(password, Buffer.from(salt, "hex"), 64).toString(
+    "hex",
+  );
   return `scrypt$${salt}$${hash}`;
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     if (!(await isOwner(req))) {
-      return NextResponse.json({ error: "Unauthorized: Owner access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Unauthorized: Owner access required" },
+        { status: 403 },
+      );
     }
 
     const { id } = await params;
@@ -36,11 +47,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const email = body.email?.trim().toLowerCase();
     const role = body.role;
 
-    if (!name || !email || !role || !["user", "admin", "owner"].includes(role)) {
-      return NextResponse.json({ error: "Name, email, and a valid role are required" }, { status: 400 });
+    if (
+      !name ||
+      !email ||
+      !role ||
+      !["user", "admin", "owner"].includes(role)
+    ) {
+      return NextResponse.json(
+        { error: "Name, email, and a valid role are required" },
+        { status: 400 },
+      );
     }
     if (body.password !== undefined && body.password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 },
+      );
     }
 
     const result = await pool.query(
@@ -52,7 +74,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
            updated_at = NOW()
        WHERE id::text = $6
        RETURNING id::text AS id, name, email, role AS type`,
-      [name, email, role, body.password ?? null, body.password ? hashPassword(body.password) : null, id]
+      [
+        name,
+        email,
+        role,
+        body.password ?? null,
+        body.password ? hashPassword(body.password) : null,
+        id,
+      ],
     );
 
     if (result.rowCount === 0) {
@@ -62,26 +91,43 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (err: unknown) {
     console.error(err);
     if ((err as { code?: string })?.code === "23505") {
-      return NextResponse.json({ error: "Email is already in use" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Email is already in use" },
+        { status: 409 },
+      );
     }
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update user" },
+      { status: 500 },
+    );
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     if (!(await isOwner(req))) {
-      return NextResponse.json({ error: "Unauthorized: Owner access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Unauthorized: Owner access required" },
+        { status: 403 },
+      );
     }
 
     const { id } = await params;
-    const result = await pool.query("DELETE FROM users WHERE id::text = $1", [id]);
+    const result = await pool.query("DELETE FROM users WHERE id::text = $1", [
+      id,
+    ]);
     if (result.rowCount === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Failed to remove user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to remove user" },
+      { status: 500 },
+    );
   }
 }

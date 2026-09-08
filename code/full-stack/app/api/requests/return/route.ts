@@ -2,70 +2,92 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../../db/init/db_index";
 import { broadcastEvent } from "../../sse/route";
 
-async function getUserRole(
-  userId: string | undefined,
-): Promise<"user" | "admin" | "owner" | null> {
-  if (!userId) return null;
-  try {
-    const result = await pool.query<{ role: "user" | "admin" | "owner" }>(
-      "SELECT role FROM users WHERE id::text = $1",
-      [userId],
-    );
-    return result.rows[0]?.role ?? null;
-  } catch (err) {
-    console.error("Error fetching user role:", err);
-    return null;
+//GET API for querying Requested assets
+export async function GET(req: NextRequest) {
+  const result = await pool.query(
+    `
+        SELECT ac.checkout_id, a.name AS asset, u.name AS user, ac.checkout_status, ac.request_date, ac.request_reason, u.user_id, u.email
+FROM asset_checkout ac JOIN users u ON ac.user_id = u.user_id 
+JOIN assets a ON a.asset_id = ac.asset_id WHERE ac.checkout_status = 'PENDING'
+        `,
+  );
+  return NextResponse.json(result.rows);
+}
+
+type CreateRequestBody = {
+  assetId?: string;
+  requestReason?: string;
+  checkoutLength: string;
+  dueDate: string;
+};
+
+function stringToStableInteger(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) % 2147483647;
   }
+  return hash || 1;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const cookies = req.cookies;
-    const userId = cookies.get("auth_user")?.value;
-    const userRole = await getUserRole(userId);
-
-    if (userRole !== "admin" && userRole !== "owner") {
+    const body = (await req.json()) as CreateRequestBody;
+    const checkout_length = body.checkoutLength;
+    const due_date = body.dueDate;
+    console.log("FULL BODY:", body);
+    const assetId = body.assetId?.trim();
+    const request_reason = body.requestReason;
+    if (!assetId) {
       return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
-      );
-    }
-
-    const body = (await req.json()) as { checkout_id?: string };
-    const checkout_id = body.checkout_id;
-
-    if (!checkout_id)
-      return NextResponse.json({ error: "No ID provided" }, { status: 400 });
-    const reqRow = await pool.query<{ checkout_status: string }>(
-      `
-            SELECT checkout_status FROM asset_checkout WHERE checkout_id = $1
-            `,
-      [checkout_id],
-    );
-    if (reqRow.rowCount === 0) {
-      return NextResponse.json({ error: "Request not found" }, { status: 400 });
-    }
-    if (reqRow.rows[0].checkout_status === "RETURNED") {
-      return NextResponse.json(
-        { error: "Request already processed" },
+        { error: "assetId is required" },
         { status: 400 },
       );
     }
 
-    await pool.query(
+    const authUser =
+      req.cookies.get("auth_user")?.value?.trim() ?? "anonymous_user";
+    const userIdColumnType = await pool.query<{ data_type: string }>(
       `
-            UPDATE asset_checkout 
-            SET checkout_status = $1, returned_at = CURRENT_TIMESTAMP
-            WHERE checkout_id = $2
+            SELECT data_type
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'asset_checkout'
+              AND column_name = 'user_id'
+            LIMIT 1
             `,
-      ["RETURNED", checkout_id],
     );
-    broadcastEvent({ type: "RETURNED", requestId: checkout_id });
-    return NextResponse.json({ success: true });
+
+    const dataType = userIdColumnType.rows[0]?.data_type ?? "integer";
+    let userIdValue: string | number;
+    if (
+      dataType === "uuid" ||
+      dataType === "text" ||
+      dataType === "character varying"
+    ) {
+      userIdValue = authUser;
+    } else {
+      const numeric = Number.parseInt(authUser, 10);
+      userIdValue = Number.isNaN(numeric)
+        ? stringToStableInteger(authUser)
+        : numeric;
+    }
+
+    const inserted = await pool.query<{ user_id: string }>(
+      `
+            INSERT INTO asset_checkout (asset_id, user_id, checkout_status, request_reason, checkout_length, due_date)
+            VALUES ($1, $2, 'PENDING', $3, $4, $5)
+            `,
+      [assetId, userIdValue, request_reason, checkout_length, due_date],
+    );
+
+    const requestId = inserted.rows[0]?.user_id;
+
+    broadcastEvent({ type: "REQUEST_CREATED", requestId });
+    return NextResponse.json({ success: true, request_id: requestId });
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { error: "Failed to approve return" },
+      { error: "Failed to create request" },
       { status: 500 },
     );
   }

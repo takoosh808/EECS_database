@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       email: string;
       role: "user" | "admin" | "owner";
     }>(
-      `SELECT user_id::text AS id, ${nameColumn} AS user_name, email, role FROM users WHERE user_id::text = $1 LIMIT 1`,
+      `SELECT user_id::text AS user_id, ${nameColumn} AS user_name, email, role FROM users WHERE user_id::text = $1 LIMIT 1`,
       [userId],
     );
 
