@@ -72,8 +72,8 @@ export async function PUT(
            role = $3,
            password_hash = CASE WHEN $4::text IS NULL THEN password_hash ELSE $5 END,
            updated_at = NOW()
-       WHERE id::text = $6
-       RETURNING id::text AS id, name, email, role AS type`,
+      WHERE user_id::text = $6
+      RETURNING user_id::text AS id, name, email, role AS type`,
       [
         name,
         email,
@@ -116,7 +116,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const result = await pool.query("DELETE FROM users WHERE id::text = $1", [
+    const result = await pool.query("DELETE FROM users WHERE user_id::text = $1", [
       id,
     ]);
     if (result.rowCount === 0) {

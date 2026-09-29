@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   try {
     const nameColumn = await resolveNameColumn();
     const result = await pool.query<{
-      id: string;
+      user_id: string;
       user_name: string;
       email: string;
       role: "user" | "admin" | "owner";
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      id: user.id,
+      id: user.user_id,
       name: user.user_name,
       email: user.email,
       role: user.role,

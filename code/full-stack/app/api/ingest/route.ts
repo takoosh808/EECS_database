@@ -17,17 +17,16 @@ type AssetIngestRow = {
   rowNumber: number;
   name: string;
   categoryName: string;
-  labName: string;
+  location: string;
   serialNumber: string;
 };
 
 type ResolvedAssetIngestRow = AssetIngestRow & {
   categoryId: string;
-  labId: string;
 };
 
-const REQUIRED_HEADERS = ["name", "category_name", "lab_name", "serial_number"] as const;
-const ALLOWED_HEADERS = new Set<string>(REQUIRED_HEADERS);
+const REQUIRED_HEADERS = ["name", "category_name", "serial_number"] as const;
+const ALLOWED_HEADERS = new Set<string>([...REQUIRED_HEADERS, "lab_name", "location"]);
 
 function parseCsv(content: string): string[][] {
   const rows: string[][] = [];
@@ -156,7 +155,8 @@ function validateRows(csvRows: string[][]): {
 
     const name = cellValue(cells, headerMap, "name");
     const categoryName = cellValue(cells, headerMap, "category_name");
-    const labName = cellValue(cells, headerMap, "lab_name");
+    const location =
+      cellValue(cells, headerMap, "location") || cellValue(cells, headerMap, "lab_name");
     const serialNumber = cellValue(cells, headerMap, "serial_number");
 
     if (!name) {
@@ -167,8 +167,8 @@ function validateRows(csvRows: string[][]): {
       errors.push({ row: rowNumber, field: "category_name", message: "category_name is required." });
     }
 
-    if (!labName) {
-      errors.push({ row: rowNumber, field: "lab_name", message: "lab_name is required." });
+    if (!location) {
+      errors.push({ row: rowNumber, field: "location", message: "location or lab_name is required." });
     }
 
     if (!serialNumber) {
@@ -190,7 +190,7 @@ function validateRows(csvRows: string[][]): {
       rowNumber,
       name,
       categoryName,
-      labName,
+      location,
       serialNumber,
     });
   }
@@ -203,7 +203,7 @@ function validateRows(csvRows: string[][]): {
 
 async function getOrCreateCategory(name: string): Promise<{ id: string; name: string }> {
   const existing = await pool.query<{ id: string; name: string }>(
-    `SELECT id::text AS id, name
+    `SELECT category_id::text AS id, name
      FROM categories
      WHERE name = $1
      LIMIT 1`,
@@ -217,31 +217,8 @@ async function getOrCreateCategory(name: string): Promise<{ id: string; name: st
   const inserted = await pool.query<{ id: string; name: string }>(
     `INSERT INTO categories (name)
      VALUES ($1)
-     RETURNING id::text AS id, name`,
-    [name]
-  );
-
-  return inserted.rows[0];
-}
-
-async function getOrCreateLab(name: string): Promise<{ id: string; name: string }> {
-  const existing = await pool.query<{ id: string; name: string }>(
-    `SELECT id::text AS id, name
-     FROM labs
-     WHERE name = $1
-     LIMIT 1`,
-    [name]
-  );
-
-  if (existing.rows[0]) {
-    return existing.rows[0];
-  }
-
-  const inserted = await pool.query<{ id: string; name: string }>(
-    `INSERT INTO labs (name)
-     VALUES ($1)
      ON CONFLICT (name) DO NOTHING
-     RETURNING id::text AS id, name`,
+     RETURNING category_id::text AS id, name`,
     [name]
   );
 
@@ -250,15 +227,15 @@ async function getOrCreateLab(name: string): Promise<{ id: string; name: string 
   }
 
   const fallback = await pool.query<{ id: string; name: string }>(
-    `SELECT id::text AS id, name
-     FROM labs
+    `SELECT category_id::text AS id, name
+     FROM categories
      WHERE name = $1
      LIMIT 1`,
     [name]
   );
 
   if (!fallback.rows[0]) {
-    throw new Error(`Unable to resolve lab: ${name}`);
+    throw new Error(`Unable to resolve category: ${name}`);
   }
 
   return fallback.rows[0];
@@ -268,7 +245,6 @@ async function resolveRows(rows: AssetIngestRow[]): Promise<{ resolvedRows: Reso
   const resolvedRows: ResolvedAssetIngestRow[] = [];
   const errors: IngestionError[] = [];
   const categoryCache = new Map<string, { id: string; name: string }>();
-  const labCache = new Map<string, { id: string; name: string }>();
 
   for (const row of rows) {
     try {
@@ -278,21 +254,14 @@ async function resolveRows(rows: AssetIngestRow[]): Promise<{ resolvedRows: Reso
         categoryCache.set(row.categoryName, category);
       }
 
-      let lab = labCache.get(row.labName);
-      if (!lab) {
-        lab = await getOrCreateLab(row.labName);
-        labCache.set(row.labName, lab);
-      }
-
       resolvedRows.push({
         ...row,
         categoryId: category.id,
-        labId: lab.id,
       });
     } catch (error) {
       errors.push({
         row: row.rowNumber,
-        field: "category_name/lab_name",
+        field: "category_name",
         message: (error as Error).message,
       });
     }
@@ -310,26 +279,36 @@ async function ingestRows(rows: ResolvedAssetIngestRow[]): Promise<{ inserted: n
     await client.query("BEGIN");
 
     for (const row of rows) {
-      const existing = await client.query<{ id: string }>(
-        "SELECT id::text AS id FROM assets WHERE serial_number = $1",
+      const existing = await client.query<{ asset_id: string }>(
+        "SELECT asset_id::text AS asset_id FROM assets WHERE serial_number = $1",
         [row.serialNumber]
       );
 
       if (existing.rowCount && existing.rowCount > 0) {
+        const assetId = existing.rows[0].asset_id;
         await client.query(
           `UPDATE assets
            SET name = $1,
-               category_id = $2::uuid,
-               lab_id = $3::uuid
-           WHERE serial_number = $4`,
-          [row.name, row.categoryId, row.labId, row.serialNumber]
+               location = $2
+           WHERE asset_id = $3`,
+          [row.name, row.location, assetId]
+        );
+        await client.query("DELETE FROM asset_categories WHERE asset_id = $1", [assetId]);
+        await client.query(
+          "INSERT INTO asset_categories (asset_id, category_id) VALUES ($1, $2)",
+          [assetId, row.categoryId],
         );
         updated += 1;
       } else {
+        const insertedAsset = await client.query<{ asset_id: string }>(
+          `INSERT INTO assets (name, location, serial_number)
+           VALUES ($1, $2, $3)
+           RETURNING asset_id::text AS asset_id`,
+          [row.name, row.location, row.serialNumber]
+        );
         await client.query(
-          `INSERT INTO assets (name, category_id, lab_id, serial_number)
-           VALUES ($1, $2::uuid, $3::uuid, $4)`,
-          [row.name, row.categoryId, row.labId, row.serialNumber]
+          "INSERT INTO asset_categories (asset_id, category_id) VALUES ($1, $2)",
+          [insertedAsset.rows[0].asset_id, row.categoryId],
         );
         inserted += 1;
       }

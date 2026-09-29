@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await pool.query<{ password_hash: string }>(
-      `SELECT password_hash FROM users WHERE id::text = $1 LIMIT 1`,
+      `SELECT password_hash FROM users WHERE user_id::text = $1 LIMIT 1`,
       [userId]
     );
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
     }
 
-    await pool.query(`UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id::text = $2`, [
+    await pool.query(`UPDATE users SET password_hash = $1, updated_at = NOW() WHERE user_id::text = $2`, [
       hashPassword(newPassword),
       userId,
     ]);

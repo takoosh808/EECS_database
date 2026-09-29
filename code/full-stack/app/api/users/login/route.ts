@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       user_id: string;
       user_name: string;
       email: string;
-      role: "user" | "admin";
+      role: "user" | "admin" | "owner";
       password_hash: string;
     }>(
       `SELECT user_id::text AS user_id, ${nameColumn} AS user_name, email, role, password_hash

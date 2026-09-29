@@ -87,8 +87,8 @@ export default function UploadPage() {
           <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Admin import</p>
           <h1 className="mt-2 text-3xl font-semibold text-gray-900">CSV Asset Upload</h1>
           <p className="mt-3 max-w-3xl text-sm text-gray-600">
-            Upload a CSV that matches the asset schema. The import creates missing categories and labs from the names
-            in the file, then inserts or updates assets by serial number.
+            Upload a CSV that matches the asset schema. The import creates missing categories, stores the location,
+            and inserts or updates assets by serial number.
           </p>
 
           <form
@@ -125,12 +125,12 @@ export default function UploadPage() {
             <ul className="space-y-2 text-gray-700">
               <li>name</li>
               <li>category_name</li>
-              <li>lab_name</li>
+              <li>location or lab_name</li>
               <li>serial_number</li>
             </ul>
             <p className="mt-3 text-gray-600">
-              Categories and labs are created automatically from the provided names. This page is aligned to the asset
-              table, so the upload only handles asset records.
+              Categories are created automatically when needed. The legacy lab_name header is accepted as the asset
+              location.
             </p>
           </div>
 

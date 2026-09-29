@@ -7,8 +7,10 @@ import { Asset } from "@/app/types";
 
 type ActiveCheckout = {
   asset_id: string;
-  user_id: string;
+  user_name: string;
   request_date: string | null;
+  checkout_length: string | null;
+  due_date: string | null;
 };
 
 const CHECKOUT_LENGTH_OPTIONS = [
@@ -117,8 +119,9 @@ export default function UserHomePage() {
             name: row.name,
             location: row.location,
             rentedOut: Boolean(active),
-            rentedTo: active?.user_id ?? null,
+            rentedTo: active?.user_name ?? null,
             rentedOutAt: active?.request_date ?? null,
+            checkoutLength: active?.checkout_length ?? null,
             description: `Serial: ${row.serial_number}`,
           };
         });
@@ -224,6 +227,7 @@ export default function UserHomePage() {
                 <th className="px-4 py-3 font-semibold">Rented Out</th>
                 <th className="px-4 py-3 font-semibold">Rented Out To</th>
                 <th className="px-4 py-3 font-semibold">Rented Out Date</th>
+                <th className="px-4 py-3 font-semibold">Rent Out Duration</th>
                 <th className="px-4 py-3 font-semibold">Details</th>
                 <th className="px-4 py-3 font-semibold">Request Asset</th>
               </tr>
@@ -233,7 +237,7 @@ export default function UserHomePage() {
                 <tr>
                   <td
                     className="px-4 py-6 text-center text-gray-500"
-                    colSpan={7}
+                    colSpan={8}
                   >
                     No assets match your search/filter.
                   </td>
@@ -248,7 +252,12 @@ export default function UserHomePage() {
                     {asset.rentedOut ? "Yes" : "No"}
                   </td>
                   <td className="px-4 py-3">{asset.rentedTo ?? "-"}</td>
-                  <td className="px-4 py-3">{asset.rentedOutAt ?? "-"}</td>
+                  <td className="px-4 py-3">
+                    {asset.rentedOutAt
+                      ? new Date(asset.rentedOutAt).toLocaleDateString()
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3">{asset.checkoutLength ?? "-"}</td>
                   <td className="px-4 py-3">
                     <button
                       type="button"

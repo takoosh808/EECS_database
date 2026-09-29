@@ -82,5 +82,6 @@ export type AssetRow = {
   rentedOut: boolean;
   rentedTo: string | null;
   rentedOutAt: string | null;
+  checkoutLength: string | null;
   description: string;
 };

@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
     }
 
     const nameColumn = await resolveNameColumn();
-    const result = await pool.query<{ id: string; user_name: string; email: string }>(
+    const result = await pool.query<{ user_id: string; user_name: string; email: string }>(
       `UPDATE users
        SET ${nameColumn} = $1, email = $2, updated_at = NOW()
-       WHERE id::text = $3
-       RETURNING id::text AS id, ${nameColumn} AS user_name, email`,
+      WHERE user_id::text = $3
+      RETURNING user_id::text AS user_id, ${nameColumn} AS user_name, email`,
       [name, email, userId]
     );
 
