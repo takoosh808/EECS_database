@@ -4,9 +4,13 @@
 https://youtu.be/ZcDor2jgSRQ
 
 ## What's New (User Facing) 
-  *Added Owner User type, elevated above admin
-  *Created Unit tests for individual Endpoints
-  *Created system test for testing full workflow
+•Created owner user type with elevated privileges to control user creation and access
+•Created unit tests to guarantee health of endpoints
+•Created system test to ensure full system workflow works
+•Refactored Database Schema for clarity and ease of use
+•Refactored UI elements to make them cleaner as well as scale better
+•Integrated both group members work together
+  
 
 ## Work Summary (Developer Facing)
 This sprint was primarily focused on polishing up the current features and creating a fully functional mvp to display to client.
@@ -31,7 +35,17 @@ Here's what we'd like to improve:
    * N/A
   
 Here are changes we plan to implement in the next sprint:
-   * Creating the final report and finishing it up
+   •Functional Requirement Plans:
+    o Finish Homepage and Admin Dash
+    o Handle soon to be due and overdue assets
+    o Fix any issues regarding database refactoring (CSV import)
+    o Implement barcode scanning
+    o Polish all features and conduct tests to help identify bugs
+    o Preform Security Testing
+   •Non-Functional Requirement Plans:
+    o Redesign the Admin Approve/Deny menu to prep for scaling issues
+    o Polish UI
+    o Discuss with client about the web application's accessibility and ease of use
 
 
 
