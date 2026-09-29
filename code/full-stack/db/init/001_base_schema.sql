@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS asset_checkout(
   checkout_length VARCHAR(20),
   due_date TIMESTAMPTZ,
   returned_at TIMESTAMPTZ,
-  CHECK (checkout_status IN ('PENDING','ACTIVE', 'RETURNED'))
+  CHECK (checkout_status IN ('PENDING','ACTIVE', 'RETURNED', 'DENIED'))
 );
 
 
