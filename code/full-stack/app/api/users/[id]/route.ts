@@ -7,18 +7,18 @@ export const runtime = "nodejs";
 type UpdateUserBody = {
   name?: string;
   email?: string;
-  role?: "user" | "admin" | "owner";
+  role?: "user" | "admin";
   password?: string;
 };
 
-async function isOwner(req: NextRequest): Promise<boolean> {
+async function isAdmin(req: NextRequest): Promise<boolean> {
   const userId = req.cookies.get("auth_user")?.value;
   if (!userId) return false;
   const result = await pool.query<{ role: string }>(
     "SELECT role FROM users WHERE user_id::text = $1 LIMIT 1",
     [userId],
   );
-  return result.rows[0]?.role === "owner";
+  return result.rows[0]?.role === "admin";
 }
 
 function hashPassword(password: string): string {
@@ -34,9 +34,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    if (!(await isOwner(req))) {
+    if (!(await isAdmin(req))) {
       return NextResponse.json(
-        { error: "Unauthorized: Owner access required" },
+        { error: "Unauthorized: Admin access required" },
         { status: 403 },
       );
     }
@@ -51,7 +51,7 @@ export async function PUT(
       !name ||
       !email ||
       !role ||
-      !["user", "admin", "owner"].includes(role)
+      !["user", "admin"].includes(role)
     ) {
       return NextResponse.json(
         { error: "Name, email, and a valid role are required" },
@@ -108,9 +108,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    if (!(await isOwner(req))) {
+    if (!(await isAdmin(req))) {
       return NextResponse.json(
-        { error: "Unauthorized: Owner access required" },
+        { error: "Unauthorized: Admin access required" },
         { status: 403 },
       );
     }

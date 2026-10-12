@@ -31,7 +31,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
-    if (role !== "admin" && role !== "owner") {
+    if (role !== "admin") {
       router.push("/home");
       return;
     }

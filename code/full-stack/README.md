@@ -14,7 +14,7 @@ docker compose exec web node -e "const {scryptSync,randomBytes}=require('crypto'
 docker compose exec db psql -U eecsuser -d eecsdb -c "INSERT INTO users (name, email, role, password_hash) VALUES ('<name>', '<email>', 'user', '<scrypt-hash-from-step-1>') ON CONFLICT (email) DO NOTHING RETURNING id, name, email, role;"
 ```
 
-- Use `role = 'admin'` to create an admin account, or `role = 'owner'` to create an owner account with user-management permissions.
+- Use `role = 'admin'` to create an admin account. Admin accounts can manage users and inventory.
 - The user can now sign in at `/login` with the email and the plaintext password used in step 1.
 
 **Containerization (Docker) — Step-by-step**

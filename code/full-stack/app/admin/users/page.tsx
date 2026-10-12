@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardShell from "../../components/DashboardShell";
 
-type UserType = "Owner" | "Admin" | "User";
+type UserType = "Admin" | "User";
 
 type User = {
   id: string;
@@ -14,7 +14,7 @@ type User = {
 };
 
 type ApiUser = Omit<User, "type"> & {
-  type: "user" | "admin" | "owner";
+  type: "user" | "admin";
 };
 
 type SearchField = "all" | "name" | "email" | "id";
@@ -28,7 +28,7 @@ type UsersResponse = {
 function formatUser(user: ApiUser): User {
   return {
     ...user,
-    type: user.type === "owner" ? "Owner" : user.type === "admin" ? "Admin" : "User",
+    type: user.type === "admin" ? "Admin" : "User",
   };
 }
 
@@ -40,7 +40,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [searchField, setSearchField] = useState<SearchField>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | UserType>("all");
-  const [userRole, setUserRole] = useState<"admin" | "owner" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -57,7 +57,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
-    if (role !== "admin" && role !== "owner") {
+    if (role !== "admin") {
       router.push("/home");
       return;
     }
@@ -119,7 +119,7 @@ export default function UsersPage() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim().toLowerCase(),
-          role: type === "Owner" ? "owner" : type === "Admin" ? "admin" : "user",
+          role: type === "Admin" ? "admin" : "user",
         }),
       });
       const payload = (await response.json()) as UsersResponse;
@@ -169,7 +169,7 @@ export default function UsersPage() {
       body: JSON.stringify({
         name: editName.trim(),
         email: editEmail.trim().toLowerCase(),
-        role: editType === "Owner" ? "owner" : editType === "Admin" ? "admin" : "user",
+        role: editType === "Admin" ? "admin" : "user",
         password: editPassword || undefined,
       }),
     });
@@ -203,7 +203,7 @@ export default function UsersPage() {
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">Users</h1>
             <p className="mt-2 text-sm text-zinc-600">Manage inventory system accounts and access types.</p>
           </div>
-          {userRole === "owner" && (
+          {userRole === "admin" && (
             <button
               type="button"
               onClick={() => setShowCreateForm(true)}
@@ -241,7 +241,6 @@ export default function UsersPage() {
               className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-crimson-500"
             >
               <option value="all">All user types</option>
-              <option value="Owner">Owner</option>
               <option value="Admin">Admin</option>
               <option value="User">User</option>
             </select>
@@ -256,7 +255,7 @@ export default function UsersPage() {
                 <th className="px-4 py-3 font-semibold">Email</th>
                 <th className="px-4 py-3 font-semibold">ID</th>
                 <th className="px-4 py-3 font-semibold">User Type</th>
-                {userRole === "owner" && <th className="px-4 py-3 font-semibold">Actions</th>}
+                {userRole === "admin" && <th className="px-4 py-3 font-semibold">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -289,9 +288,7 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        user.type === "Owner"
-                          ? "bg-amber-100 text-amber-800"
-                          : user.type === "Admin"
+                        user.type === "Admin"
                           ? "bg-crimson-100 text-crimson-800"
                           : "bg-zinc-100 text-zinc-700"
                       }`}
@@ -299,7 +296,7 @@ export default function UsersPage() {
                       {user.type}
                     </span>
                   </td>
-                  {userRole === "owner" && (
+                  {userRole === "admin" && (
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button
@@ -377,7 +374,6 @@ export default function UsersPage() {
                     onChange={(event) => setType(event.target.value as UserType)}
                     className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-crimson-500"
                   >
-                    <option value="Owner">Owner</option>
                     <option value="User">User</option>
                     <option value="Admin">Admin</option>
                   </select>
@@ -390,15 +386,6 @@ export default function UsersPage() {
                     className="rounded-md bg-crimson-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {creating ? "Creating..." : "Create User"}
-                  {userRole === "owner" && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCreateForm(true)}
-                      className="rounded-md bg-crimson-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-700"
-                    >
-                      Create New User
-                    </button>
-                  )}
                   </button>
                 </div>
                 {createError && <p className="text-sm text-red-600">{createError}</p>}
@@ -468,7 +455,6 @@ export default function UsersPage() {
                   onChange={(event) => setEditType(event.target.value as UserType)}
                   className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-crimson-500"
                 >
-                  <option value="Owner">Owner</option>
                   <option value="Admin">Admin</option>
                   <option value="User">User</option>
                 </select>

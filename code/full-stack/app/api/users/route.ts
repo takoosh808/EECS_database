@@ -8,24 +8,24 @@ type UserRow = {
   id: string;
   name: string;
   email: string;
-  type: "user" | "admin" | "owner";
+  type: "user" | "admin";
 };
 
 type CreateUserBody = {
   name?: string;
   email?: string;
-  role?: "user" | "admin" | "owner";
+  role?: "user" | "admin";
 };
 
 async function getRole(
   req: NextRequest,
-): Promise<"user" | "admin" | "owner" | null> {
+): Promise<"user" | "admin" | null> {
   const userId = req.cookies.get("auth_user")?.value;
   if (!userId) {
     return null;
   }
 
-  const result = await pool.query<{ role: "user" | "admin" | "owner" }>(
+  const result = await pool.query<{ role: "user" | "admin" }>(
     "SELECT role FROM users WHERE user_id::text = $1 LIMIT 1",
     [userId],
   );
@@ -53,7 +53,7 @@ function hashPassword(password: string): string {
 export async function GET(req: NextRequest) {
   try {
     const role = await getRole(req);
-    if (role !== "admin" && role !== "owner") {
+    if (role !== "admin") {
       return NextResponse.json(
         { error: "Unauthorized: Admin access required" },
         { status: 403 },
@@ -78,9 +78,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    if ((await getRole(req)) !== "owner") {
+    if ((await getRole(req)) !== "admin") {
       return NextResponse.json(
-        { error: "Unauthorized: Owner access required" },
+        { error: "Unauthorized: Admin access required" },
         { status: 403 },
       );
     }
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    if (role !== "user" && role !== "admin" && role !== "owner") {
+    if (role !== "user" && role !== "admin") {
       return NextResponse.json({ error: "Invalid user role" }, { status: 400 });
     }
 

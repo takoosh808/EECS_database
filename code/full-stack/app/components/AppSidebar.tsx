@@ -21,10 +21,10 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [userRole, setUserRole] = useState<"user" | "admin" | "owner" | null>(null);
+  const [userRole, setUserRole] = useState<"user" | "admin" | null>(null);
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole") as "user" | "admin" | "owner" | null;
+    const role = localStorage.getItem("userRole") as "user" | "admin" | null;
     setUserRole(role);
   }, []);
 
@@ -62,7 +62,7 @@ export default function AppSidebar() {
             </Link>
           );
         })}
-        {(userRole === "admin" || userRole === "owner") && (
+        {userRole === "admin" && (
           <>
             <hr className="my-2 border-zinc-700" />
             {ADMIN_NAV_ITEMS.map((item) => {
