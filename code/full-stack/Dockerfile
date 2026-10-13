@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 RUN --mount=type=cache,target=/root/.npm \
-    if [ -f package-lock.json ]; then npm ci --include=prod --include=dev --no-audit --no-fund --prefer-offline; \
+    if [ -f package-lock.json ]; then npm ci --include=prod --include=dev --bin-links=true --no-audit --no-fund --prefer-offline; \
     elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i --frozen-lockfile; \
     else echo "No lockfile found" && exit 1; fi
