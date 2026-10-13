@@ -55,9 +55,8 @@ docker compose logs db --tail=200
 
 6. Test the app in your browser:
 
-- Through nginx reverse-proxy: `http://localhost:8080`
-- Directly to the app: `http://localhost:3000`
-- Health endpoint: `http://localhost:8080/health` or `http://localhost:3000/health`
+- Through nginx reverse-proxy: `https://cpts-invtoolapp.eecs.wsu.edu`
+- Health endpoint: `https://cpts-invtoolapp.eecs.wsu.edu/health`
 
 7. Troubleshooting commands you may need:
 
