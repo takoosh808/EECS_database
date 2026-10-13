@@ -10,8 +10,8 @@ RUN --mount=type=cache,target=/root/.npm \
 
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
 RUN test -x node_modules/.bin/next
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL
@@ -21,8 +21,8 @@ RUN --mount=type=cache,target=/app/.next/cache npm run build
 # Runnable image that keeps devDependencies and test sources for `docker compose run test`
 FROM node:20-alpine AS test
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
 CMD ["npm", "run", "test"]
 
 FROM node:20-alpine AS runner
