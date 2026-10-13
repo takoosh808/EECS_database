@@ -7,12 +7,26 @@ RUN --mount=type=cache,target=/root/.npm \
     elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i --frozen-lockfile; \
     else echo "No lockfile found" && exit 1; fi
+RUN echo "=== deps-stage diagnostics ===" \
+    && echo "NODE_ENV=${NODE_ENV:-unset}" \
+    && echo "npm omit=$(npm config get omit)" \
+    && echo "npm bin-links=$(npm config get bin-links)" \
+    && (npm ls next --depth=0 || true) \
+    && (ls -l node_modules/.bin/next || true) \
+    && if [ -f node_modules/next/package.json ]; then node -p "'next package version=' + require('./node_modules/next/package.json').version"; else echo "next package directory missing"; fi
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
-RUN test -x node_modules/.bin/next
+RUN echo "=== builder-stage diagnostics ===" \
+    && echo "NODE_ENV=${NODE_ENV:-unset}" \
+    && echo "npm omit=$(npm config get omit)" \
+    && echo "npm bin-links=$(npm config get bin-links)" \
+    && (npm ls next --depth=0 || true) \
+    && (ls -l node_modules/.bin/next || true) \
+    && if [ -f node_modules/next/package.json ]; then node -p "'next package version=' + require('./node_modules/next/package.json').version"; else echo "next package directory missing"; fi \
+    && test -x node_modules/.bin/next
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
