@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import BarcodeScanner from "./BarcodeScanner";
 import { Asset } from "../../types";
 import { Lab } from "../../types";
 import { Category } from "../../types";
@@ -49,6 +50,21 @@ export default function CreateAssetBox({
   const [error, setError] = useState<string | null>(null);
 
   const [manageOpen, setManageOpen] = useState<ManageType>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const applyBarcode = (raw: string) => {
+    const code = raw.trim();
+    if (!code) return;
+    setSerialNumber(code);
+    setScannerOpen(false);
+    if (assets.some((a) => a.serial_number === code)) {
+      setError(`An asset with barcode "${code}" already exists.`);
+      return;
+    }
+    setError(null);
+    nameInputRef.current?.focus();
+  };
 
   const addCategoryTag = (category_id: string) => {
     if (!category_id) return;
@@ -68,6 +84,11 @@ export default function CreateAssetBox({
 
     if (!name.trim() || !serial_number.trim()) {
       setError("Name and serial number are required.");
+      return;
+    }
+
+    if (assets.some((a) => a.serial_number === serial_number.trim())) {
+      setError(`An asset with barcode "${serial_number.trim()}" already exists.`);
       return;
     }
 
@@ -180,6 +201,7 @@ export default function CreateAssetBox({
           {/* Name */}
           <FormField label="Name">
             <input
+              ref={nameInputRef}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -320,14 +342,30 @@ export default function CreateAssetBox({
           </div>
 
           {/* Serial Number */}
-          <FormField label="Serial Number">
-            <input
-              type="text"
-              value={serial_number}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              placeholder="Enter serial number"
-              className="w-full rounded-md border border-black px-4 py-3 outline-none focus:ring-1 focus:ring-black"
-            />
+          <FormField label="Serial Number / Barcode">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={serial_number}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                onKeyDown={(e) => {
+                  // Handheld scanners type the code then press Enter.
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    applyBarcode(e.currentTarget.value);
+                  }
+                }}
+                placeholder="Scan or enter barcode / serial number"
+                className="w-full rounded-md border border-black px-4 py-3 outline-none focus:ring-1 focus:ring-black"
+              />
+              <button
+                type="button"
+                onClick={() => setScannerOpen(true)}
+                className="shrink-0 rounded-md border border-black px-4 py-3 hover:bg-gray-100"
+              >
+                Use Camera
+              </button>
+            </div>
           </FormField>
 
           {/* Description */}
@@ -371,6 +409,13 @@ export default function CreateAssetBox({
           </div>
         </form>
       </div>
+
+      {scannerOpen && (
+        <BarcodeScanner
+          onDetect={applyBarcode}
+          onClose={() => setScannerOpen(false)}
+        />
+      )}
     </div>
   );
 }
