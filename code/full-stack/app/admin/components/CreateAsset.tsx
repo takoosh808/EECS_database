@@ -211,6 +211,14 @@ export default function CreateAssetBox({
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            onClick={() => setScannerOpen(true)}
+            className="w-full rounded-md border border-black px-4 py-3 font-medium hover:bg-gray-100"
+          >
+            Scan
+          </button>
+
           {/* Name */}
           <FormField label="Name">
             <input
@@ -356,29 +364,19 @@ export default function CreateAssetBox({
 
           {/* Serial Number */}
           <FormField label="Serial Number / Barcode">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={serial_number}
-                onChange={(e) => setSerialNumber(e.target.value)}
-                onKeyDown={(e) => {
-                  // Handheld scanners type the code then press Enter.
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    applyBarcode(e.currentTarget.value);
-                  }
-                }}
-                placeholder="Scan or enter barcode / serial number"
-                className="w-full rounded-md border border-black px-4 py-3 outline-none focus:ring-1 focus:ring-black"
-              />
-              <button
-                type="button"
-                onClick={() => setScannerOpen(true)}
-                className="shrink-0 rounded-md border border-black px-4 py-3 hover:bg-gray-100"
-              >
-                Use Camera
-              </button>
-            </div>
+            <input
+              type="text"
+              value={serial_number}
+              onChange={(e) => setSerialNumber(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyBarcode(e.currentTarget.value);
+                }
+              }}
+              placeholder="Scan or enter barcode / serial number"
+              className="w-full rounded-md border border-black px-4 py-3 outline-none focus:ring-1 focus:ring-black"
+            />
           </FormField>
 
           {/* Description */}
