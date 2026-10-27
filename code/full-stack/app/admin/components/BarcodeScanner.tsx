@@ -1,12 +1,7 @@
 "use client";
 
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { useEffect, useRef, useState } from "react";
-
-type DetectedBarcode = { rawValue: string };
-type BarcodeDetectorLike = {
-  detect: (source: CanvasImageSource) => Promise<DetectedBarcode[]>;
-};
-type BarcodeDetectorCtor = new () => BarcodeDetectorLike;
 
 interface BarcodeScannerProps {
   onDetect: (code: string) => void;
@@ -26,57 +21,42 @@ export default function BarcodeScanner({
   }, [onDetect]);
 
   useEffect(() => {
-    const Detector = (
-      window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }
-    ).BarcodeDetector;
-
-    if (!Detector) {
-      setError(
-        "Camera scanning isn't supported in this browser. Use a handheld scanner or type the barcode instead.",
-      );
-      return;
-    }
     if (!navigator.mediaDevices?.getUserMedia) {
       setError("Camera access requires a secure (HTTPS) connection.");
       return;
     }
 
-    const detector = new Detector();
-    let stream: MediaStream | undefined;
-    let timer: number | undefined;
+    const reader = new BrowserMultiFormatReader();
+    let controls: { stop: () => void } | undefined;
     let cancelled = false;
+    let detected = false;
 
     async function start() {
+      const video = videoRef.current;
+      if (!video) return;
+
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-        const video = videoRef.current;
-        if (cancelled || !video) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-
-        video.srcObject = stream;
-        await video.play();
-
-        const scan = async () => {
-          if (cancelled) return;
-          try {
-            const codes = await detector.detect(video);
-            const value = codes[0]?.rawValue?.trim();
-            if (value) {
+        controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: "environment" } } },
+          video,
+          (result) => {
+            const value = result?.getText().trim();
+            if (value && !detected) {
+              detected = true;
               onDetectRef.current(value);
-              return;
             }
-          } catch {
-            // Frame not ready yet; try again on the next tick.
-          }
-          timer = window.setTimeout(scan, 250);
-        };
-        scan();
-      } catch {
-        setError("Unable to access the camera. Check your browser permissions.");
+          },
+        );
+        if (cancelled || detected) controls.stop();
+      } catch (err) {
+        if (cancelled) return;
+        const permissionDenied =
+          err instanceof Error && err.name === "NotAllowedError";
+        setError(
+          permissionDenied
+            ? "Camera access was denied. Allow camera access in your browser settings."
+            : "Unable to start the camera. Check camera permissions and try again.",
+        );
       }
     }
 
@@ -84,8 +64,7 @@ export default function BarcodeScanner({
 
     return () => {
       cancelled = true;
-      if (timer) window.clearTimeout(timer);
-      stream?.getTracks().forEach((track) => track.stop());
+      controls?.stop();
     };
   }, []);
 
