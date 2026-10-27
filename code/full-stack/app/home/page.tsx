@@ -229,19 +229,20 @@ export default function UserHomePage() {
           </p>
         </header>
 
+        <div className="-mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setScanError(null);
+              setShowBarcodeScanner(true);
+            }}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+          >
+            Scan
+          </button>
+        </div>
+
         <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex justify-end">
-            <button
-              type="button"
-              onClick={() => {
-                setScanError(null);
-                setShowBarcodeScanner(true);
-              }}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              Scan
-            </button>
-          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="search"
