@@ -10,6 +10,8 @@ import CreateAssetBox from "./CreateAsset";
 
 export default function ManageAssetsView() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -23,7 +25,7 @@ export default function ManageAssetsView() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch("/api/assets/get");
+      const res = await fetch(`/api/assets/get?deleted=${showDeleted}`);
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -38,7 +40,7 @@ export default function ManageAssetsView() {
 
   const fetchAssetsCategories = async () => {
     try {
-      const res = await fetch("/api/assets/get");
+      const res = await fetch(`/api/assets/get?deleted=${showDeleted}`);
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -86,24 +88,34 @@ export default function ManageAssetsView() {
   useEffect(() => {
     fetchAssetsCategories();
     fetchData();
-  }, []);
+  }, [showDeleted]);
 
   async function remove(asset: Asset) {
+    setActionError(null);
     try {
       const res = await fetch("/api/assets/edit/remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asset_id: asset.asset_id }),
+        body: JSON.stringify({
+          asset_id: asset.asset_id,
+          restore: showDeleted,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to remove asset");
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result.error || "Failed to update asset");
+      }
+      setAssets((prev) => prev.filter((a) => a.asset_id !== asset.asset_id));
     } catch (err) {
       console.error(err);
+      setActionError(
+        err instanceof Error ? err.message : "Failed to update asset",
+      );
     }
-    setAssets((prev) => prev.filter((a) => a.asset_id !== asset.asset_id));
   }
 
   const handleCreateAsset = async (newAsset: Asset) => {
-    setAssets((prev) => [...prev, newAsset]);
+    if (!showDeleted) setAssets((prev) => [...prev, newAsset]);
 
     const newAssetCategories = await fetchCategories(newAsset.asset_id);
     setAssetCategories((prev) => ({
@@ -129,10 +141,13 @@ export default function ManageAssetsView() {
 
   const filteredAssets = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
+    const visibleAssets = assets.filter(
+      (asset) => Boolean(asset.is_deleted) === showDeleted,
+    );
 
-    if (!query) return assets;
+    if (!query) return visibleAssets;
 
-    return assets.filter((asset) => {
+    return visibleAssets.filter((asset) => {
       const matchesAsset =
         asset.name?.toLowerCase().includes(query) ||
         asset.serial_number?.toLowerCase().includes(query) ||
@@ -144,7 +159,7 @@ export default function ManageAssetsView() {
 
       return matchesAsset || matchesCategory;
     });
-  }, [assets, assetCategories, searchQuery]);
+  }, [assets, assetCategories, searchQuery, showDeleted]);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 py-2">
@@ -174,6 +189,22 @@ export default function ManageAssetsView() {
       )}
       {/* Search + Filters */}
       <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <label className="mb-3 flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={showDeleted}
+            onChange={(event) => {
+              setShowDeleted(event.target.checked);
+              setActionError(null);
+            }}
+          />
+          Inventory Backlog (Assets Removed from Inventory)
+        </label>
+        {actionError && (
+          <p role="alert" className="mb-3 text-sm text-red-600">
+            {actionError}
+          </p>
+        )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="search"
@@ -194,13 +225,15 @@ export default function ManageAssetsView() {
               <th className="px-4 py-3 font-semibold">Location</th>
               <th className="px-4 py-3 font-semibold">Category</th>
               <th className="px-4 py-3 font-semibold">Serial Number</th>
-              <th className="px-4 py-3 font-semibold">Remove Asset</th>
+              <th className="px-4 py-3 font-semibold">
+                {showDeleted ? "Restore Asset" : "Remove from Inventory"}
+              </th>
               <th className="px-4 py-3 font-semibold">Edit Asset/View Asset</th>
             </tr>
           </thead>
 
           <tbody>
-            {assets.length === 0 && (
+            {filteredAssets.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-center text-gray-500" colSpan={7}>
                   No assets match your search/filter.
@@ -229,15 +262,39 @@ export default function ManageAssetsView() {
                       onClick={() => {
                         remove(asset);
                       }}
-                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 cursor-pointer"
+                      disabled={
+                        !showDeleted &&
+                        (asset.is_checked_out || asset.has_pending_requests)
+                      }
+                      title={
+                        !showDeleted && asset.has_pending_requests
+                          ? "Clear pending requests before removing this asset"
+                          : !showDeleted && asset.is_checked_out
+                            ? "Mark this asset returned before removing it"
+                            : undefined
+                      }
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Remove Asset
+                      {showDeleted
+                        ? "Restore Asset"
+                        : asset.has_pending_requests
+                          ? "Pending requests"
+                          : asset.is_checked_out
+                            ? "Checked out"
+                            : "Remove from Inventory"}
                     </button>
+                    {!showDeleted && asset.has_pending_requests && (
+                      <p className="mt-1 max-w-48 text-xs text-gray-600">
+                        Clear pending requests in the Requests tab before
+                        removing this asset.
+                      </p>
+                    )}
                   </td>
 
                   <td className="px-4 py-3">
                     <button
                       type="button"
+                      disabled={showDeleted}
                       onClick={() => {
                         setShowEditPanel(true);
                         setSelectedAsset(asset);

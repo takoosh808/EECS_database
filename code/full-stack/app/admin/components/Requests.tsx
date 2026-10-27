@@ -1,73 +1,39 @@
 "use client";
-import { AssetCheckout, AssetCheckoutDetails } from "../../types";
+import type { AssetCheckoutDetails } from "../../types";
 import { useState } from "react";
 import ReviewRequestBox from "./ReviewRequestBox";
+import RequestTable from "./RequestTable";
+
 type Props = {
   data: AssetCheckoutDetails[];
   onActionComplete?: () => void;
 };
 
-//View for requested assets
 export default function RequestsView({ data }: Props) {
-  const [showReviewRequest, setShowReviewRequest] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetCheckoutDetails>();
-  const [error, setError] = useState<string | null>(null);
   return (
-    <div className="bg-white rounded-lg border border-zinc-200 shadow-sm p-6 max-w-6xl mx-auto">
-      <h2 className="text-1xl font-bold mb-4">
-        Pending Requests ({data.length})
-      </h2>
-      {data.length === 0 && (
-        <p className="text-zinc-500 text-center">No pending requests.</p>
+    <>
+      <RequestTable
+        data={data}
+        title="Pending Requests"
+        description="Review incoming requests and respond to borrowers."
+        emptyMessage="No pending requests."
+        dateLabel="Request date"
+        formatDate={value => new Date(value).toLocaleDateString()}
+        actions={request => (
+          <button type="button" className="cursor-pointer rounded-md bg-crimson-700 px-3 py-2 text-sm font-medium text-white hover:bg-crimson-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson-600" onClick={() => setSelectedAsset(request)}>
+            Review
+          </button>
+        )}
+      />
+      {selectedAsset && (
+        <ReviewRequestBox
+          key={selectedAsset.checkout_id}
+          onClose={() => setSelectedAsset(undefined)}
+          request={selectedAsset}
+          adminEmail={selectedAsset.email}
+        />
       )}
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
-      {data.length !== 0 && (
-        <>
-          {/* Table header */}
-          <div className="grid grid-cols-5 gap-4 font-semibold text-zinc-600 border-b border-zinc-200 pb-2 mb-2">
-            <div>USER</div>
-            <div>ASSET</div>
-            <div>REQUEST DATE</div>
-            <div>STATUS</div>
-            <div>ACTIONS</div>
-          </div>
-          {/* Table rows */}
-          <div className="space-y-2">
-            {data.map((req) => (
-              <div
-                key={req.checkout_id}
-                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-crimson-50 border border-crimson-100"
-              >
-                <div>
-                  <div>{req.user}</div>
-                  <div className="text-sm text-gray-500">{req.email}</div>
-                </div>
-                <div>{req.asset}</div>
-                <div>{new Date(req.request_date).toLocaleDateString()}</div>
-                <div>{req.checkout_status}</div>
-                <div>
-                  <button
-                    className="bg-gray-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
-                    onClick={() => {
-                      setShowReviewRequest(true);
-                      setSelectedAsset(req);
-                    }}
-                  >
-                    Review
-                  </button>
-                </div>
-                {showReviewRequest && selectedAsset && (
-                  <ReviewRequestBox
-                    onClose={() => setShowReviewRequest(false)}
-                    request={req}
-                    adminEmail={req.email}
-                  ></ReviewRequestBox>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    </>
   );
 }

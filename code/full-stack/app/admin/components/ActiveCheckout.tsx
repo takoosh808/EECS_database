@@ -1,17 +1,13 @@
 "use client";
-import { act, useEffect, useState } from "react";
-import { Asset, AssetCheckout } from "../../types";
-import { refresh } from "next/cache";
-import { NEXT_HMR_REFRESH_HASH_COOKIE } from "next/dist/client/components/app-router-headers";
+import type { AssetCheckout } from "../../types";
+import RequestTable from "./RequestTable";
 
 type Props = {
   data: AssetCheckout[];
   onActionComplete?: () => void;
 };
 
-//View for active checkouts
 export default function ActiveAssetsView({ data }: Props) {
-  const [error, setError] = useState<string | null>(null);
   async function ApproveReturn(checkout_id: string) {
     try {
       const res = await fetch("/api/requests/return", {
@@ -25,51 +21,19 @@ export default function ActiveAssetsView({ data }: Props) {
     }
   }
 
-  //Display active assets
   return (
-    <div className="bg-white border border-zinc-200 shadow-sm p-6 max-w-6xl mx-auto">
-      <h2 className="text-1xl font-bold mb-4">
-        Active Requests ({data.length})
-      </h2>
-      {data.length === 0 && (
-        <p className="text-zinc-500 text-center">No pending requests.</p>
+    <RequestTable
+      data={data}
+      title="Active Requests"
+      description="Track equipment on loan and process returns."
+      emptyMessage="No active requests."
+      dateLabel="Checked out"
+      formatDate={value => new Date(value).toLocaleDateString()}
+      actions={active => (
+        <button type="button" className="cursor-pointer rounded-md bg-crimson-700 px-3 py-2 text-sm font-medium text-white hover:bg-crimson-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson-600" onClick={() => ApproveReturn(active.checkout_id)}>
+          Mark Returned
+        </button>
       )}
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
-      {data.length !== 0 && (
-        <>
-          <div className="grid grid-cols-5 gap-4 font-semibold text-zinc-600 border-b border-zinc-200 pb-2 mb-2">
-            <div>USER</div>
-            <div>ASSET</div>
-            <div>CHECKED OUT</div>
-            <div>STATUS</div>
-            <div>ACTIONS</div>
-          </div>
-          <div className="space-y-2">
-            {data.map((active) => (
-              <div
-                key={active.checkout_id}
-                className="grid grid-cols-5 gap-4 items-center p-3 rounded-md bg-crimson-50 border border-crimson-100"
-              >
-                <div>
-                  <div>{active.user}</div>
-                  <div className="text-sm text-gray-500">{active.email}</div>
-                </div>
-                <div>{active.asset}</div>
-                <div>{new Date(active.request_date).toLocaleDateString()}</div>
-                <div>{active.checkout_status}</div>
-                <div>
-                  <button
-                    className="bg-gray-500 text-white px-2 py-1 rounded mr-2 cursor-pointer"
-                    onClick={() => ApproveReturn(active.checkout_id)}
-                  >
-                    Mark Returned
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    />
   );
 }

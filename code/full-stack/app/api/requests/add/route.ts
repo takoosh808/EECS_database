@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
     broadcastEvent({ type: "ADD_REQUEST", asset_id: asset.asset_id });
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
+    if ((err as { code?: string }).code === "23514") {
+      return NextResponse.json({ error: "This asset is no longer available." }, { status: 409 });
+    }
     console.error("Error adding new request to database", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

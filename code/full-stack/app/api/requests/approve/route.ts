@@ -84,6 +84,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error(err);
+    if ((err as { code?: string }).code === "23514") {
+      return NextResponse.json({ error: "Restore this deleted asset before approving its request." }, { status: 409 });
+    }
     return NextResponse.json(
       { error: "Failed to approve request" },
       { status: 500 },

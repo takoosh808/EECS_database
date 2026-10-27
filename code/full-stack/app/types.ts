@@ -48,6 +48,9 @@ export type MyAssets = {
 };
 
 export type Asset = {
+  is_deleted?: boolean;
+  is_checked_out?: boolean;
+  has_pending_requests?: boolean;
   asset_id: string;
   name: string;
   description: string;

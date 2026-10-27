@@ -84,6 +84,9 @@ export async function POST(req: NextRequest) {
     broadcastEvent({ type: "REQUEST_CREATED", requestId });
     return NextResponse.json({ success: true, request_id: requestId });
   } catch (err) {
+    if ((err as { code?: string }).code === "23514") {
+      return NextResponse.json({ error: "This asset is no longer available. Refresh the asset list." }, { status: 409 });
+    }
     console.error(err);
     return NextResponse.json(
       { error: "Failed to create request" },
