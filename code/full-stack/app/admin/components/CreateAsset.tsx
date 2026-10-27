@@ -13,13 +13,18 @@ interface CreateAssetPanelProps {
   onClose: () => void; // called when user closes panel
   onCreate: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
+  initialBarcode?: string;
 }
 
 export default function CreateAssetBox({
   onClose,
   onCreate,
   assets,
+  initialBarcode = "",
 }: CreateAssetPanelProps) {
+  const [initialSerial, initialName, initialLocation] = initialBarcode
+    .split("|")
+    .map((part) => part.trim());
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
     const loadCategories = async () => {
@@ -41,22 +46,30 @@ export default function CreateAssetBox({
   const [categoryToAdd, setCategoryToAdd] = useState("");
   const [description, setDescription] = useState("");
   const [image_url, setImageUrl] = useState("");
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [serial_number, setSerialNumber] = useState("");
+  const [name, setName] = useState(initialName ?? "");
+  const [location, setLocation] = useState(initialLocation ?? "");
+  const [serial_number, setSerialNumber] = useState(initialSerial ?? "");
   const [newCategory, setNewCategory] = useState("");
   const [newLab, setNewLab] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    assets.some((asset) => asset.serial_number === initialSerial)
+      ? `An asset with barcode "${initialSerial}" already exists.`
+      : null,
+  );
 
   const [manageOpen, setManageOpen] = useState<ManageType>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const applyBarcode = (raw: string) => {
-    const code = raw.trim();
+    // Plain code = serial number; "SERIAL|Name|Location" also prefills those fields.
+    const [rawSerial, rawName, rawLocation] = raw.split("|").map((s) => s.trim());
+    const code = rawSerial;
     if (!code) return;
     setSerialNumber(code);
+    if (rawName) setName(rawName);
+    if (rawLocation) setLocation(rawLocation);
     setScannerOpen(false);
     if (assets.some((a) => a.serial_number === code)) {
       setError(`An asset with barcode "${code}" already exists.`);
