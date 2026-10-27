@@ -7,7 +7,6 @@ import { Category } from "@/app/types";
 import { AssetCategory } from "@/app/types";
 import { Lab } from "@/app/types";
 import CreateAssetBox from "./CreateAsset";
-import BarcodeScanner from "./BarcodeScanner";
 
 export default function ManageAssetsView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,8 +20,6 @@ export default function ManageAssetsView() {
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [initialBarcode, setInitialBarcode] = useState("");
 
   const fetchData = async () => {
     try {
@@ -159,43 +156,20 @@ export default function ManageAssetsView() {
           </p>
         </header>
 
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-            onClick={() => setShowBarcodeScanner(true)}
-          >
-            Scan
-          </button>
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-            onClick={() => {
-              setInitialBarcode("");
-              setShowCreatePanel(true);
-            }}
-          >
-            Add New Asset
-          </button>
-        </div>
+        <button
+          type="button"
+          className="cursor-pointer rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+          onClick={() => setShowCreatePanel(true)}
+        >
+          Add New Asset
+        </button>
       </div>
 
       {showCreatePanel && (
         <CreateAssetBox
           assets={assets}
-          initialBarcode={initialBarcode}
           onClose={() => setShowCreatePanel(false)}
           onCreate={handleCreateAsset}
-        />
-      )}
-      {showBarcodeScanner && (
-        <BarcodeScanner
-          onDetect={(barcode) => {
-            setInitialBarcode(barcode);
-            setShowBarcodeScanner(false);
-            setShowCreatePanel(true);
-          }}
-          onClose={() => setShowBarcodeScanner(false)}
         />
       )}
       {/* Search + Filters */}

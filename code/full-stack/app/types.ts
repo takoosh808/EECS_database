@@ -78,6 +78,7 @@ export type Category = {
 export type AssetRow = {
   id: string;
   name: string;
+  serial_number?: string;
   location: string;
   rentedOut: boolean;
   rentedTo: string | null;

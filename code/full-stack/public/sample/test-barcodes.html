@@ -6,8 +6,8 @@
 <style>
   body { font-family: sans-serif; margin: 24px; }
   .grid { display: flex; flex-wrap: wrap; gap: 24px; }
-  .card { border: 1px solid #999; padding: 12px; width: 360px; text-align: center; }
-  .card svg { width: 100%; height: 90px; }
+  .card { border: 1px solid #999; padding: 12px; width: min(100%, 800px); text-align: center; }
+  .card svg { display: block; width: 100%; height: auto; shape-rendering: crispEdges; }
   .meta { font-size: 13px; color: #444; margin-top: 6px; }
   input { width: 360px; padding: 6px; }
 </style>
@@ -44,11 +44,12 @@ function code128Svg(text) {
     });
   }
   const total = x + 10; // 10-module quiet zone on each side
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} 100" preserveAspectRatio="none">` +
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} 100">` +
          `<rect width="${total}" height="100" fill="#fff"/>${rects}</svg>`;
 }
 
 const samples = [
+  ["WSU-002|raspberry pi", "Two fields: Serial Number and Name"],
   ["WSU-TEST-0001", "Serial only: fills Serial Number"],
   ["WSU-TEST-0002|Raspberry Pi 5|EECS Lab 101", "Fills Serial, Name, Location"],
   ["WSU-TEST-0003|Oscilloscope|Hardware Lab", "Fills Serial, Name, Location"],

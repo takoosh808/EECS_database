@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { AssetRow } from "@/app/types";
 import { Asset } from "@/app/types";
+import BarcodeScanner from "../admin/components/BarcodeScanner";
+import { parseBarcode } from "../utils/barcode";
 
 type ActiveCheckout = {
   asset_id: string;
@@ -75,6 +77,8 @@ export default function UserHomePage() {
   const [onlyRentedOut, setOnlyRentedOut] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetRow | null>(null);
   const [requestAsset, setRequestAsset] = useState<AssetRow | null>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [checkoutLength, setCheckoutLength] = useState("");
   const [requestReason, setRequestReason] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -117,6 +121,7 @@ export default function UserHomePage() {
           return {
             id: row.asset_id,
             name: row.name,
+            serial_number: row.serial_number,
             location: row.location,
             rentedOut: Boolean(active),
             rentedTo: active?.user_name ?? null,
@@ -175,6 +180,44 @@ export default function UserHomePage() {
     return formatCheckoutRange(selectedOption.months, selectedOption.weeks);
   }, [checkoutLength]);
 
+  const handleScannedBarcode = (raw: string) => {
+    setShowBarcodeScanner(false);
+    setScanError(null);
+    const parsed = parseBarcode(raw);
+
+    if (!parsed) {
+      setScanError("The barcode does not contain an asset serial number.");
+      return;
+    }
+
+    const normalizedSerial = parsed.serialNumber.toLowerCase();
+    const scannedAsset =
+      assets.find(
+        (asset) => asset.serial_number?.trim().toLowerCase() === normalizedSerial,
+      ) ??
+      assets.find(
+        (asset) =>
+          asset.name.trim().toLowerCase() ===
+          (parsed.name ?? parsed.serialNumber).trim().toLowerCase(),
+      );
+
+    if (!scannedAsset) {
+      setScanError(`No inventory asset matches barcode "${parsed.serialNumber}".`);
+      return;
+    }
+
+    if (scannedAsset.rentedOut) {
+      setScanError(`${scannedAsset.name} is currently checked out.`);
+      return;
+    }
+
+    setCheckoutLength("");
+    setRequestReason("");
+    setDueDate(undefined);
+    setRequestError(null);
+    setRequestAsset(scannedAsset);
+  };
+
   return (
     <DashboardShell>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 py-2">
@@ -187,6 +230,18 @@ export default function UserHomePage() {
         </header>
 
         <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setScanError(null);
+                setShowBarcodeScanner(true);
+              }}
+              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              Scan
+            </button>
+          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="search"
@@ -204,6 +259,12 @@ export default function UserHomePage() {
               Filters
             </button>
           </div>
+
+          {scanError && (
+            <p role="alert" className="mt-3 text-sm text-red-600">
+              {scanError}
+            </p>
+          )}
 
           {showFilters && (
             <div className="mt-3 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
@@ -474,6 +535,12 @@ export default function UserHomePage() {
             </form>
           </div>
         </div>
+      )}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onDetect={handleScannedBarcode}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
       )}
     </DashboardShell>
   );

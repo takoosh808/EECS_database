@@ -1,6 +1,7 @@
 "use client";
 
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import { DecodeHintType } from "@zxing/library";
 import { useEffect, useRef, useState } from "react";
 
 interface BarcodeScannerProps {
@@ -26,7 +27,9 @@ export default function BarcodeScanner({
       return;
     }
 
-    const reader = new BrowserMultiFormatReader();
+    const hints = new Map();
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    const reader = new BrowserMultiFormatReader(hints);
     let controls: { stop: () => void } | undefined;
     let cancelled = false;
     let detected = false;
@@ -37,7 +40,13 @@ export default function BarcodeScanner({
 
       try {
         controls = await reader.decodeFromConstraints(
-          { video: { facingMode: { ideal: "environment" } } },
+          {
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
           video,
           (result) => {
             const value = result?.getText().trim();

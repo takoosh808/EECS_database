@@ -6,6 +6,7 @@ import { Asset } from "../../types";
 import { Lab } from "../../types";
 import { Category } from "../../types";
 import { AssetCategory } from "../../types";
+import { parseBarcode } from "../../utils/barcode";
 
 type ManageType = "category" | "lab" | null;
 
@@ -13,18 +14,13 @@ interface CreateAssetPanelProps {
   onClose: () => void; // called when user closes panel
   onCreate: (asset: Asset) => void; // called when user submits new asset
   assets: Asset[];
-  initialBarcode?: string;
 }
 
 export default function CreateAssetBox({
   onClose,
   onCreate,
   assets,
-  initialBarcode = "",
 }: CreateAssetPanelProps) {
-  const [initialSerial, initialName, initialLocation] = initialBarcode
-    .split("|")
-    .map((part) => part.trim());
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
     const loadCategories = async () => {
@@ -46,33 +42,32 @@ export default function CreateAssetBox({
   const [categoryToAdd, setCategoryToAdd] = useState("");
   const [description, setDescription] = useState("");
   const [image_url, setImageUrl] = useState("");
-  const [name, setName] = useState(initialName ?? "");
-  const [location, setLocation] = useState(initialLocation ?? "");
-  const [serial_number, setSerialNumber] = useState(initialSerial ?? "");
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [serial_number, setSerialNumber] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newLab, setNewLab] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(
-    assets.some((asset) => asset.serial_number === initialSerial)
-      ? `An asset with barcode "${initialSerial}" already exists.`
-      : null,
-  );
+  const [error, setError] = useState<string | null>(null);
 
   const [manageOpen, setManageOpen] = useState<ManageType>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const applyBarcode = (raw: string) => {
-    // Plain code = serial number; "SERIAL|Name|Location" also prefills those fields.
-    const [rawSerial, rawName, rawLocation] = raw.split("|").map((s) => s.trim());
-    const code = rawSerial;
-    if (!code) return;
-    setSerialNumber(code);
-    if (rawName) setName(rawName);
-    if (rawLocation) setLocation(rawLocation);
+    const parsed = parseBarcode(raw);
+    if (!parsed) {
+      setError("The barcode must include a serial number.");
+      return;
+    }
+
+    setSerialNumber(parsed.serialNumber);
+    if (parsed.name) setName(parsed.name);
+    if (parsed.location) setLocation(parsed.location);
+    if (parsed.description) setDescription(parsed.description);
     setScannerOpen(false);
-    if (assets.some((a) => a.serial_number === code)) {
-      setError(`An asset with barcode "${code}" already exists.`);
+    if (assets.some((asset) => asset.serial_number === parsed.serialNumber)) {
+      setError(`An asset with barcode "${parsed.serialNumber}" already exists.`);
       return;
     }
     setError(null);
