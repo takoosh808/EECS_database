@@ -50,6 +50,7 @@ const mockAssets: AssetRow[] = [
     rentedOut: false,
     rentedTo: null,
     rentedOutAt: null,
+    checkoutLength: null,
     description: "Basic office laptop",
   },
   {
@@ -59,6 +60,7 @@ const mockAssets: AssetRow[] = [
     rentedOut: true,
     rentedTo: "Alice",
     rentedOutAt: "2026-01-01",
+    checkoutLength: null,
     description: "High performance laptop",
   },
   {
@@ -68,6 +70,7 @@ const mockAssets: AssetRow[] = [
     rentedOut: true,
     rentedTo: "Bob",
     rentedOutAt: "2026-01-02",
+    checkoutLength: null,
     description: "4K projector",
   },
 ];
