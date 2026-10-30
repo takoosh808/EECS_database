@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS assets (
   location TEXT,
   serial_number TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS asset_categories (
@@ -62,6 +63,17 @@ CREATE TABLE IF NOT EXISTS asset_checkout_messages(
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE notification_history (
+  noto_id UUID NOT NULL DEFAULT gen_random_uuid(),
+  checkout_id UUID,
+  UNIQUE(checkout_id),
+  due_in_week BOOLEAN DEFAULT FALSE,
+  due_tomorrow BOOLEAN DEFAULT FALSE,
+  overdue BOOLEAN DEFAULT FALSE,
+  checkout_status TEXT,
+  PRIMARY KEY(noto_id, checkout_id),
+  FOREIGN KEY (checkout_id) REFERENCES asset_checkout(checkout_id)
+);
 
 CREATE INDEX IF NOT EXISTS idx_assets_checkout_status ON asset_checkout(checkout_status);
 

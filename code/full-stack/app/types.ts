@@ -89,3 +89,15 @@ export type AssetRow = {
   checkoutLength: string | null;
   description: string;
 };
+
+export type CheckoutReminder = {
+  checkout_id: string;
+  due_date: string;
+  email: string;
+  name: string;
+  asset_name: string;
+  reminderType: "OVERDUE" | "DUE_TOMORROW" | "DUE_IN_WEEK" | null;
+  overdue: boolean;
+  due_tomorrow: boolean;
+  due_in_week: boolean;
+};
