@@ -54,7 +54,7 @@ export async function sendNotifications() {
       case "OVERDUE":
         resend.emails.send({
           from: "onboarding@resend.dev",
-          to: checkout.email,
+          to: "kaden.metzger@gmail.com",
           subject: "Borrowed Asset Overdue Reminder",
           html: `
             <div>
@@ -77,7 +77,7 @@ export async function sendNotifications() {
         // Send tomorrow reminder
         resend.emails.send({
           from: "onboarding@resend.dev",
-          to: checkout.email,
+          to: "kaden.metzger@gmail.com",
           subject: "Borrowed Asset Reminder",
           html: `
             <div>
