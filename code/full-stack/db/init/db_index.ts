@@ -35,6 +35,9 @@ const config: DBConfig = {
   password: process.env.DB_PASSWORD || "",
 };
 
-const pool = new Pool(config);
+// DATABASE_URL is set in Docker; the local config is the npm run dev fallback.
+const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : new Pool(config);
 
 export default pool;
