@@ -14,6 +14,24 @@ services:
       timeout: 5s
       retries: 10
 
+  db-maintenance:
+    image: postgres:17
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+    volumes:
+      - ./db/maintenance:/maintenance:ro
+    command:
+      - sh
+      - -c
+      - for f in /maintenance/*.sql; do psql -v ON_ERROR_STOP=1 -f "$$f" || exit 1; done
+
   web:
     pull_policy: build
     build:
@@ -27,6 +45,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-maintenance:
+        condition: service_completed_successfully
     expose:
       - "3000"
 
