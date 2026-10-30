@@ -1,1 +1,1 @@
-0 8 * * * . /etc/scheduler.env; /usr/local/bin/run-notifications.sh
+*/5 * * * * . /etc/scheduler.env; /usr/local/bin/run-notifications.sh
