@@ -1,7 +1,7 @@
 # Sprint 5 Report (10/1/2026-10/31/2026)
 
 ## video link
-
+https://youtu.be/GiiNzKj7eZA
 
 ## What's New (User Facing) 
 •Created barcode scanning capabilities on browser
